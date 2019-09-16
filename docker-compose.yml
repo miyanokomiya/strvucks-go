@@ -12,3 +12,30 @@ services:
     command: fresh
     tty:
       true
+    environment:
+      DB_HOST: db
+      DB_PORT: 5432
+      POSTGRES_USER: user
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: db
+    depends_on:
+      - db
+  db:
+    image: postgres:10.3-alpine
+    environment:
+      POSTGRES_USER: user
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: db
+      IMPORT_FROM_DIR: /data
+    ports:
+      - 5432:5432
+    volumes:
+      - ./db/sh:/docker-entrypoint-initdb.d
+      - ./db/data:/data
+      - ./db/storage:/var/lib/postgresql/data
+  adminer:
+    image: adminer:4.6
+    ports:
+      - "8000:8080"
+    depends_on:
+      - db
