@@ -1,0 +1,121 @@
+package src
+
+import (
+	"os"
+	"time"
+
+	"github.com/jinzhu/gorm"
+
+	_ "github.com/jinzhu/gorm/dialects/postgres"
+)
+
+var dbInstance *gorm.DB
+
+// DB Get DB
+func DB() *gorm.DB {
+	if dbInstance != nil {
+		return dbInstance
+	}
+
+	DBMS := "postgres"
+	USER := os.Getenv("POSTGRES_USER")
+	PASS := os.Getenv("POSTGRES_PASSWORD")
+	HOST := os.Getenv("DB_HOST")
+	DBNAME := os.Getenv("POSTGRES_DB")
+
+	CONNECT := "user=" + USER + " password=" + PASS + " dbname=" + DBNAME + " host=" + HOST + " sslmode=disable"
+	db, err := gorm.Open(DBMS, CONNECT)
+
+	if err != nil {
+		panic(err.Error())
+	}
+
+	dbInstance = db
+	return dbInstance
+}
+
+// User model
+type User struct {
+	ID           int64
+	AthleteID    int64
+	Username     string
+	IftttKey     string
+	IftttMessage string
+}
+
+// Permission model
+type Permission struct {
+	ID          int64
+	AthleteID   int64
+	StravaToken string
+}
+
+// WebhookEvent model
+type WebhookEvent struct {
+	ID             int64
+	AspectType     string `json:"aspect_type"`
+	EventTime      int64  `json:"event_time"`
+	ObjectID       int64  `json:"object_id"`
+	ObjectType     string `json:"object_type"`
+	OwnerID        int64  `json:"owner_id"`
+	SubscriptionID int64  `json:"subscription_id"`
+}
+
+// Summary model
+type Summary struct {
+	ID                        int64
+	AthleteID                 int64
+	LatestDistance            float64
+	LatestMovingTime          int
+	LatestTotalElevationGain  float64
+	LatestCalories            float64
+	MonthBaseDate             time.Time
+	MonthlyCount              int64
+	MonthlyDistance           float64
+	MonthlyMovingTime         int
+	MonthlyTotalElevationGain float64
+	MonthlyCalories           float64
+	WeekBaseDate              time.Time
+	WeeklyCount               int64
+	WeeklyDistance            float64
+	WeeklyMovingTime          int
+	WeeklyTotalElevationGain  float64
+	WeeklyCalories            float64
+}
+
+type IftttBody struct {
+	Value1 string `json:"value1"`
+}
+
+func (user *User) Save(db *gorm.DB) *gorm.DB {
+	old := User{}
+	if orm := db.Where("athlete_id = ?", user.AthleteID).First(&old); orm.RecordNotFound() {
+		return db.Create(user)
+	} else if orm.Error == nil {
+		return db.Save(user)
+	} else {
+		return orm
+	}
+}
+
+func (permission *Permission) Save(db *gorm.DB) *gorm.DB {
+	old := Permission{}
+	if orm := db.Where("athlete_id = ?", permission.AthleteID).First(&old); orm.RecordNotFound() {
+		return db.Create(permission)
+	} else if orm.Error == nil {
+		return db.Save(permission)
+	} else {
+		return orm
+	}
+}
+
+func (summary *Summary) Save(db *gorm.DB) *gorm.DB {
+	old := Summary{ID: summary.ID}
+	if orm := db.Find(&old); orm.RecordNotFound() {
+		return db.Create(summary)
+	} else if orm.Error == nil {
+		return db.Save(summary)
+	} else {
+		return orm
+	}
+}
