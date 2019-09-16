@@ -1,2 +1,2 @@
-migrate: make goose/up
+release: make goose/up
 web: strvucks-go
