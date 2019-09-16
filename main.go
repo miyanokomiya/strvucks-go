@@ -75,7 +75,7 @@ func main() {
 		webhookHandler(c)
 	})
 
-	r.Run(":8080")
+	r.Run(":" + os.Getenv("PORT"))
 }
 
 func indexHandler(w http.ResponseWriter, r *http.Request) {

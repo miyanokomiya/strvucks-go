@@ -17,6 +17,7 @@ services:
       POSTGRES_USER: user
       POSTGRES_PASSWORD: password
       POSTGRES_DB: db
+      PORT: 8080
     depends_on:
       - db
   db:
