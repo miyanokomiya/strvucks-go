@@ -30,7 +30,7 @@ func main() {
 	strava.ClientSecret = os.Getenv("STRAVA_CLIENTSECRET")
 
 	authenticator = &strava.OAuthAuthenticator{
-		CallbackURL:            "https://e5db56ad.ngrok.io/exchange_token",
+		CallbackURL:            "https://" + os.Getenv("CALLBACK_HOST") + "/exchange_token",
 		RequestClientGenerator: nil,
 	}
 

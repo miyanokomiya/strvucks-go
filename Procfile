@@ -1,2 +1,2 @@
 migrate: make goose/up
-web: $(basename `pwd`)
+web: strvucks-go

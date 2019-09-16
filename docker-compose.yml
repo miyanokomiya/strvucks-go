@@ -18,6 +18,7 @@ services:
       POSTGRES_PASSWORD: password
       POSTGRES_DB: db
       PORT: 8080
+      CALLBACK_HOST: e5db56ad.ngrok.io
     depends_on:
       - db
   db:
