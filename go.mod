@@ -1,3 +1,5 @@
+// +heroku install ./... github.com/pressly/goose/cmd/goose
+
 module strvucks-go
 
 go 1.13
