@@ -23,7 +23,7 @@ var authenticator *strava.OAuthAuthenticator
 func main() {
 	err := godotenv.Load(".env")
 	if err != nil {
-		log.Fatal("Error loading .env file")
+		log.Println("Not found .env file")
 	}
 
 	strava.ClientId, _ = strconv.Atoi(os.Getenv("STRAVA_CLIENTID"))
