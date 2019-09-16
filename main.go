@@ -41,28 +41,11 @@ func main() {
 		})
 	})
 
-	r.GET("/users", func(c *gin.Context) {
-		db := src.DB()
-		users := []src.User{}
-		db.Where("id > ?", 0).Find(&users)
-
-		c.JSON(200, gin.H{
-			"users": users,
-		})
-	})
-
-	r.GET("/recalc", func(c *gin.Context) {
-		summary := updateSummary(2709623755, 24775825)
-		postIfttt(summary, 2709623755)
-
-		c.JSON(200, gin.H{
-			"summary": summary,
-		})
-	})
-
 	r.GET("/", func(c *gin.Context) {
 		indexHandler(c.Writer, c.Request)
 	})
+
+  r.StaticFS("/assets", http.Dir("assets"))
 
 	r.GET("/exchange_token", func(c *gin.Context) {
 		authenticator.HandlerFunc(oAuthSuccess, oAuthFailure)(c.Writer, c.Request)
@@ -81,7 +64,8 @@ func main() {
 func indexHandler(w http.ResponseWriter, r *http.Request) {
 	// you should make this a template in your real application
 	fmt.Fprintf(w, `<a href="%s">`, authenticator.AuthorizationURL("state1", strava.Permissions.ViewPrivate, true))
-	fmt.Fprint(w, `<img src="http://strava.github.io/api/images/ConnectWithStrava.png" />`)
+  fmt.Fprint(w, `<p>Login by Strava</p>`)
+  fmt.Fprint(w, `<img src="/assets/strava.jpg" style="width: 120px; height: auto;" />`)
 	fmt.Fprint(w, `</a>`)
 }
 
