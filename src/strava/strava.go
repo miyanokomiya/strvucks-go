@@ -10,7 +10,6 @@ import (
 	"os"
 	"time"
 
-	"strvucks-go/src/swagger"
 	"golang.org/x/oauth2"
 )
 
@@ -56,13 +55,4 @@ func Client(permission *src.Permission) *http.Client {
 	client := config.Client(context.Background(), &token)
 
 	return client
-}
-
-func aaa() {
-	client := Client(nil)
-	sconfig := swagger.Configuration{
-		HTTPClient: client,
-	}
-	sclient := swagger.NewAPIClient(&sconfig)
-	sclient.ActivitiesApi.GetActivityById(context.Background(), 1, nil)
 }
