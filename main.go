@@ -2,23 +2,24 @@ package main
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
 	"fmt"
 	"log"
 	"net/http"
+	"net/url"
 	"os"
-	"strconv"
 	"strings"
 
-	"github.com/gin-gonic/gin"
+	"strvucks-go/src"
+	st "strvucks-go/src/strava"
+	"strvucks-go/src/swagger"
 
+	"github.com/antihax/optional"
+	"github.com/gin-gonic/gin"
 	"github.com/jinzhu/now"
 	"github.com/joho/godotenv"
-	"github.com/strava/go.strava"
-	"strvucks-go/src"
 )
-
-var authenticator *strava.OAuthAuthenticator
 
 func main() {
 	err := godotenv.Load(".env")
@@ -26,18 +27,10 @@ func main() {
 		log.Println("Not found .env file")
 	}
 
-	strava.ClientId, _ = strconv.Atoi(os.Getenv("STRAVA_CLIENTID"))
-	strava.ClientSecret = os.Getenv("STRAVA_CLIENTSECRET")
-
-	authenticator = &strava.OAuthAuthenticator{
-		CallbackURL:            "https://" + os.Getenv("CALLBACK_HOST") + "/exchange_token",
-		RequestClientGenerator: nil,
-	}
-
 	r := gin.Default()
 	r.GET("/ping", func(c *gin.Context) {
 		c.JSON(200, gin.H{
-			"message": "ping pong",
+			"message": "pong",
 		})
 	})
 
@@ -45,10 +38,10 @@ func main() {
 		indexHandler(c.Writer, c.Request)
 	})
 
-  r.StaticFS("/assets", http.Dir("assets"))
+	r.StaticFS("/assets", http.Dir("assets"))
 
 	r.GET("/exchange_token", func(c *gin.Context) {
-		authenticator.HandlerFunc(oAuthSuccess, oAuthFailure)(c.Writer, c.Request)
+		exchangeToken(c)
 	})
 
 	r.GET("/webhooks", func(c *gin.Context) {
@@ -62,10 +55,13 @@ func main() {
 }
 
 func indexHandler(w http.ResponseWriter, r *http.Request) {
+	config := st.Config()
+	authURL, _ := url.QueryUnescape(config.AuthCodeURL("strvucks", st.AuthCodeOption()...))
+
 	// you should make this a template in your real application
-	fmt.Fprintf(w, `<a href="%s">`, authenticator.AuthorizationURL("state1", strava.Permissions.ViewPrivate, true))
-  fmt.Fprint(w, `<p>Login by Strava</p>`)
-  fmt.Fprint(w, `<img src="/assets/strava.jpg" style="width: 120px; height: auto;" />`)
+	fmt.Fprintf(w, `<a href="%s">`, authURL)
+	fmt.Fprint(w, `<p>Login by Strava</p>`)
+	fmt.Fprint(w, `<img src="/assets/strava.jpg" style="width: 120px; height: auto;" />`)
 	fmt.Fprint(w, `</a>`)
 }
 
@@ -122,7 +118,7 @@ func webhookHandler(c *gin.Context) {
 		return
 	}
 
-	postIfttt(summary, event.ObjectID)
+	// postIfttt(summary, event.ObjectID)
 }
 
 func postIfttt(summary *src.Summary, activityID int64) {
@@ -161,15 +157,15 @@ func postIfttt(summary *src.Summary, activityID int64) {
 	buff := new(bytes.Buffer)
 	json.NewEncoder(buff).Encode(body)
 
-  iftttURL := fmt.Sprintf("https://maker.ifttt.com/trigger/%s/with/key/%s", user.IftttMessage, user.IftttKey)
+	iftttURL := fmt.Sprintf("https://maker.ifttt.com/trigger/%s/with/key/%s", user.IftttMessage, user.IftttKey)
 
-  response, err := http.Post(iftttURL, "application/json; charset=utf-8", buff)
-  if err != nil {
-    log.Println("Failure post ifttt: ", err)
-    return
-  }
-  fmt.Println(response)
-  log.Println("Success post ifttt")
+	response, err := http.Post(iftttURL, "application/json; charset=utf-8", buff)
+	if err != nil {
+		log.Println("Failure post ifttt: ", err)
+		return
+	}
+	fmt.Println(response)
+	log.Println("Success post ifttt")
 }
 
 func updateSummary(activityID int64, athleteID int64) *src.Summary {
@@ -181,20 +177,21 @@ func updateSummary(activityID int64, athleteID int64) *src.Summary {
 		return nil
 	}
 
-	client := strava.NewClient(permission.StravaToken)
-	service := strava.NewActivitiesService(client)
-	call := service.Get(activityID)
+	client := st.Client(&permission)
+	sconfig := swagger.NewConfiguration()
+	sconfig.HTTPClient = client
+	sclient := swagger.NewAPIClient(sconfig)
+	activity, _, err := sclient.ActivitiesApi.GetActivityById(context.Background(), activityID, &swagger.GetActivityByIdOpts{IncludeAllEfforts: optional.EmptyBool()})
 
-	activity, err := call.Do()
 	if err != nil {
 		log.Println("Failure get activity: ", err)
 		return nil
 	}
 
-	distance := activity.Distance
-	movingTime := activity.MovingTime
-	totalElevationGain := activity.TotalElevationGain
-	calories := activity.Calories
+	distance := float64(activity.Distance)
+	movingTime := int64(activity.MovingTime)
+	totalElevationGain := float64(activity.TotalElevationGain)
+	calories := float64(activity.Calories)
 
 	monthBaseDate := now.BeginningOfMonth()
 	weekBaseDate := now.BeginningOfWeek()
@@ -264,55 +261,77 @@ func updateSummary(activityID int64, athleteID int64) *src.Summary {
 	return &summary
 }
 
-func oAuthSuccess(auth *strava.AuthorizationResponse, w http.ResponseWriter, r *http.Request) {
+func exchangeToken(c *gin.Context) {
+	code := c.Query("code")
 
-	user := src.User{
-		AthleteID: auth.Athlete.Id,
-		Username:  auth.Athlete.FirstName + auth.Athlete.LastName,
+	config := st.Config()
+
+	token, err := config.Exchange(context.Background(), code)
+	if err != nil {
+		log.Println("Failure exchange token.")
+		c.String(400, "Failure exchange token.")
+		return
 	}
+
+	athlete, ok := token.Extra("athlete").(map[string]interface{})
+	if !ok {
+		log.Println("Failure get athlete from Strava response.")
+		c.String(400, "Failure get athlete from Strava response.")
+		return
+	}
+
+	idFloat, ok := athlete["id"].(float64)
+	if !ok {
+		log.Println("Failure get athlete from Strava response.")
+		c.String(400, "Failure get athlete from Strava response.")
+		return
+	}
+	id := int64(idFloat)
+
+	username, ok := athlete["username"].(string)
+	if !ok {
+		log.Println("Failure get athlete from Strava response.")
+		c.String(400, "Failure get athlete from Strava response.")
+		return
+	}
+	log.Println("Success get user from Strava response.", id, username)
+
 	permission := src.Permission{
-		AthleteID:   auth.Athlete.Id,
-		StravaToken: auth.AccessToken,
+		AthleteID:    id,
+		AccessToken:  token.AccessToken,
+		TokenType:    token.TokenType,
+		RefreshToken: token.RefreshToken,
+		Expiry:       token.Expiry.Unix(),
 	}
 
-	tx := src.DB().Begin()
-	tx = user.Save(tx)
+	db := src.DB()
+
+	user := src.User{}
+	if orm := db.Where("athlete_id = ?", id).First(&user); orm.Error == nil || orm.RecordNotFound() {
+		user.AthleteID = id
+		user.Username = username
+	} else {
+		log.Println("Failure get user.")
+		c.String(500, "Failure get user.")
+		return
+	}
+
+	tx := db.Begin()
 	tx = permission.Save(tx)
+	tx = user.Save(tx)
 
 	if err := tx.Error; err != nil {
 		tx.Rollback()
-		fmt.Fprintf(w, "FAILURE: %s", err)
+		log.Println("Failure save token & user.")
+		c.String(500, "Failure save token & user.")
 		return
 	}
 
 	if err := tx.Commit().Error; err != nil {
-		fmt.Fprintf(w, "FAILURE: %s", err)
+		log.Println("Failure save token & user.")
+		c.String(500, "Failure save token & user.")
 		return
 	}
 
-	fmt.Fprintf(w, "SUCCESS:\nAt this point you can use this information to create a new user or link the account to one of your existing users\n")
-	fmt.Fprintf(w, "State: %s\n\n", auth.State)
-	fmt.Fprintf(w, "Access Token: %s\n\n", auth.AccessToken)
-
-	fmt.Fprintf(w, "The Authenticated Athlete (you):\n")
-	content, _ := json.MarshalIndent(auth.Athlete, "", " ")
-	fmt.Fprint(w, string(content))
-}
-
-func oAuthFailure(err error, w http.ResponseWriter, r *http.Request) {
-	fmt.Fprintf(w, "Authorization Failure:\n")
-
-	// some standard error checking
-	if err == strava.OAuthAuthorizationDeniedErr {
-		fmt.Fprint(w, "The user clicked the 'Do not Authorize' button on the previous page.\n")
-		fmt.Fprint(w, "This is the main error your application should handle.")
-	} else if err == strava.OAuthInvalidCredentialsErr {
-		fmt.Fprint(w, "You provided an incorrect client_id or client_secret.\nDid you remember to set them at the begininng of this file?")
-	} else if err == strava.OAuthInvalidCodeErr {
-		fmt.Fprint(w, "The temporary token was not recognized, this shouldn't happen normally")
-	} else if err == strava.OAuthServerErr {
-		fmt.Fprint(w, "There was some sort of server error, try again to see if the problem continues")
-	} else {
-		fmt.Fprint(w, err)
-	}
+	c.Redirect(200, "/?auth=success")
 }

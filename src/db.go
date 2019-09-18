@@ -34,6 +34,12 @@ func DB() *gorm.DB {
 	return dbInstance
 }
 
+// Athlete model
+type Athlete struct {
+	ID       int64  `json:"id"`
+	Username string `json:"username"`
+}
+
 // User model
 type User struct {
 	ID           int64
@@ -45,9 +51,12 @@ type User struct {
 
 // Permission model
 type Permission struct {
-	ID          int64
-	AthleteID   int64
-	StravaToken string
+	ID           int64
+	AthleteID    int64
+	AccessToken  string
+	TokenType    string
+	RefreshToken string
+	Expiry       int64
 }
 
 // WebhookEvent model
@@ -66,19 +75,19 @@ type Summary struct {
 	ID                        int64
 	AthleteID                 int64
 	LatestDistance            float64
-	LatestMovingTime          int
+	LatestMovingTime          int64
 	LatestTotalElevationGain  float64
 	LatestCalories            float64
 	MonthBaseDate             time.Time
 	MonthlyCount              int64
 	MonthlyDistance           float64
-	MonthlyMovingTime         int
+	MonthlyMovingTime         int64
 	MonthlyTotalElevationGain float64
 	MonthlyCalories           float64
 	WeekBaseDate              time.Time
 	WeeklyCount               int64
 	WeeklyDistance            float64
-	WeeklyMovingTime          int
+	WeeklyMovingTime          int64
 	WeeklyTotalElevationGain  float64
 	WeeklyCalories            float64
 }
@@ -92,6 +101,7 @@ func (user *User) Save(db *gorm.DB) *gorm.DB {
 	if orm := db.Where("athlete_id = ?", user.AthleteID).First(&old); orm.RecordNotFound() {
 		return db.Create(user)
 	} else if orm.Error == nil {
+		user.ID = old.ID
 		return db.Save(user)
 	} else {
 		return orm
@@ -103,6 +113,7 @@ func (permission *Permission) Save(db *gorm.DB) *gorm.DB {
 	if orm := db.Where("athlete_id = ?", permission.AthleteID).First(&old); orm.RecordNotFound() {
 		return db.Create(permission)
 	} else if orm.Error == nil {
+		permission.ID = old.ID
 		return db.Save(permission)
 	} else {
 		return orm
@@ -114,6 +125,7 @@ func (summary *Summary) Save(db *gorm.DB) *gorm.DB {
 	if orm := db.Find(&old); orm.RecordNotFound() {
 		return db.Create(summary)
 	} else if orm.Error == nil {
+		summary.ID = old.ID
 		return db.Save(summary)
 	} else {
 		return orm
