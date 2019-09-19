@@ -11,9 +11,9 @@ import (
 	"os"
 	"strings"
 
-	"strvucks-go/src"
-	st "strvucks-go/src/strava"
-	"strvucks-go/src/swagger"
+	"strvucks-go/internal/app/handler"
+	"strvucks-go/internal/app/model"
+	"strvucks-go/pkg/swagger"
 
 	"github.com/antihax/optional"
 	"github.com/gin-gonic/gin"
@@ -55,8 +55,8 @@ func main() {
 }
 
 func indexHandler(w http.ResponseWriter, r *http.Request) {
-	config := st.Config()
-	authURL, _ := url.QueryUnescape(config.AuthCodeURL("strvucks", st.AuthCodeOption()...))
+	config := handler.Config()
+	authURL, _ := url.QueryUnescape(config.AuthCodeURL("strvucks", handler.AuthCodeOption()...))
 
 	// you should make this a template in your real application
 	fmt.Fprintf(w, `<a href="%s">`, authURL)
@@ -83,7 +83,7 @@ func webhookVarifyHandler(c *gin.Context) {
 }
 
 func webhookHandler(c *gin.Context) {
-	event := src.WebhookEvent{}
+	event := model.WebhookEvent{}
 	if err := c.BindJSON(&event); err != nil {
 		log.Println("Invalid Webhook Body")
 		c.JSON(400, nil)
@@ -105,7 +105,7 @@ func webhookHandler(c *gin.Context) {
 		return
 	}
 
-	db := src.DB()
+	db := model.DB()
 	if err := db.Create(&event).Error; err != nil {
 		log.Println("Failure: ", err)
 		c.JSON(500, nil)
@@ -121,10 +121,10 @@ func webhookHandler(c *gin.Context) {
 	// postIfttt(summary, event.ObjectID)
 }
 
-func postIfttt(summary *src.Summary, activityID int64) {
-	db := src.DB()
+func postIfttt(summary *model.Summary, activityID int64) {
+	db := model.DB()
 
-	user := src.User{}
+	user := model.User{}
 	if err := db.Where("athlete_id = ?", summary.AthleteID).First(&user).Error; err != nil {
 		log.Println("Failure get user: ", err)
 		return
@@ -150,7 +150,7 @@ func postIfttt(summary *src.Summary, activityID int64) {
 	}
 	text := strings.Join(lines, " ")
 
-	body := src.IftttBody{
+	body := model.IftttBody{
 		Value1: text,
 	}
 
@@ -168,16 +168,16 @@ func postIfttt(summary *src.Summary, activityID int64) {
 	log.Println("Success post ifttt")
 }
 
-func updateSummary(activityID int64, athleteID int64) *src.Summary {
-	db := src.DB()
+func updateSummary(activityID int64, athleteID int64) *model.Summary {
+	db := model.DB()
 
-	permission := src.Permission{}
+	permission := model.Permission{}
 	if err := db.Where("athlete_id = ?", athleteID).First(&permission).Error; err != nil {
 		log.Println("Failure get permission: ", err)
 		return nil
 	}
 
-	client := st.Client(&permission)
+	client := handler.Client(&permission)
 	sconfig := swagger.NewConfiguration()
 	sconfig.HTTPClient = client
 	sclient := swagger.NewAPIClient(sconfig)
@@ -196,7 +196,7 @@ func updateSummary(activityID int64, athleteID int64) *src.Summary {
 	monthBaseDate := now.BeginningOfMonth()
 	weekBaseDate := now.BeginningOfWeek()
 
-	summary := src.Summary{}
+	summary := model.Summary{}
 	if orm := db.Where("athlete_id = ?", athleteID).First(&summary); orm.RecordNotFound() {
 		summary.AthleteID = athleteID
 
@@ -264,7 +264,7 @@ func updateSummary(activityID int64, athleteID int64) *src.Summary {
 func exchangeToken(c *gin.Context) {
 	code := c.Query("code")
 
-	config := st.Config()
+	config := handler.Config()
 
 	token, err := config.Exchange(context.Background(), code)
 	if err != nil {
@@ -296,7 +296,7 @@ func exchangeToken(c *gin.Context) {
 	}
 	log.Println("Success get user from Strava response.", id, username)
 
-	permission := src.Permission{
+	permission := model.Permission{
 		AthleteID:    id,
 		AccessToken:  token.AccessToken,
 		TokenType:    token.TokenType,
@@ -304,9 +304,9 @@ func exchangeToken(c *gin.Context) {
 		Expiry:       token.Expiry.Unix(),
 	}
 
-	db := src.DB()
+	db := model.DB()
 
-	user := src.User{}
+	user := model.User{}
 	if orm := db.Where("athlete_id = ?", id).First(&user); orm.Error == nil || orm.RecordNotFound() {
 		user.AthleteID = id
 		user.Username = username

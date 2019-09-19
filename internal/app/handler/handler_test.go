@@ -1,4 +1,4 @@
-package strava
+package handler
 
 import (
 	"testing"

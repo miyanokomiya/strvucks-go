@@ -1,14 +1,12 @@
-package strava
-
-import (
-	"strvucks-go/src"
-)
+package handler
 
 import (
 	"context"
 	"net/http"
 	"os"
 	"time"
+
+	"strvucks-go/internal/app/model"
 
 	"golang.org/x/oauth2"
 )
@@ -44,7 +42,7 @@ func AuthCodeOption() []oauth2.AuthCodeOption {
 }
 
 // Client returns http client with oauth2
-func Client(permission *src.Permission) *http.Client {
+func Client(permission *model.Permission) *http.Client {
 	token := oauth2.Token{
 		AccessToken:  permission.AccessToken,
 		RefreshToken: permission.RefreshToken,
