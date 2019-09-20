@@ -1,8 +1,7 @@
-package src
+package model
 
 import (
 	"os"
-	"time"
 
 	"github.com/jinzhu/gorm"
 
@@ -70,28 +69,6 @@ type WebhookEvent struct {
 	SubscriptionID int64  `json:"subscription_id"`
 }
 
-// Summary model
-type Summary struct {
-	ID                        int64
-	AthleteID                 int64
-	LatestDistance            float64
-	LatestMovingTime          int64
-	LatestTotalElevationGain  float64
-	LatestCalories            float64
-	MonthBaseDate             time.Time
-	MonthlyCount              int64
-	MonthlyDistance           float64
-	MonthlyMovingTime         int64
-	MonthlyTotalElevationGain float64
-	MonthlyCalories           float64
-	WeekBaseDate              time.Time
-	WeeklyCount               int64
-	WeeklyDistance            float64
-	WeeklyMovingTime          int64
-	WeeklyTotalElevationGain  float64
-	WeeklyCalories            float64
-}
-
 type IftttBody struct {
 	Value1 string `json:"value1"`
 }
@@ -115,18 +92,6 @@ func (permission *Permission) Save(db *gorm.DB) *gorm.DB {
 	} else if orm.Error == nil {
 		permission.ID = old.ID
 		return db.Save(permission)
-	} else {
-		return orm
-	}
-}
-
-func (summary *Summary) Save(db *gorm.DB) *gorm.DB {
-	old := Summary{ID: summary.ID}
-	if orm := db.Find(&old); orm.RecordNotFound() {
-		return db.Create(summary)
-	} else if orm.Error == nil {
-		summary.ID = old.ID
-		return db.Save(summary)
 	} else {
 		return orm
 	}

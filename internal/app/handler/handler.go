@@ -1,8 +1,4 @@
-package strava
-
-import (
-	"strvucks-go/src"
-)
+package handler
 
 import (
 	"context"
@@ -10,7 +6,8 @@ import (
 	"os"
 	"time"
 
-	"strvucks-go/src/swagger"
+	"strvucks-go/internal/app/model"
+
 	"golang.org/x/oauth2"
 )
 
@@ -45,7 +42,7 @@ func AuthCodeOption() []oauth2.AuthCodeOption {
 }
 
 // Client returns http client with oauth2
-func Client(permission *src.Permission) *http.Client {
+func Client(permission *model.Permission) *http.Client {
 	token := oauth2.Token{
 		AccessToken:  permission.AccessToken,
 		RefreshToken: permission.RefreshToken,
@@ -56,13 +53,4 @@ func Client(permission *src.Permission) *http.Client {
 	client := config.Client(context.Background(), &token)
 
 	return client
-}
-
-func aaa() {
-	client := Client(nil)
-	sconfig := swagger.Configuration{
-		HTTPClient: client,
-	}
-	sclient := swagger.NewAPIClient(&sconfig)
-	sclient.ActivitiesApi.GetActivityById(context.Background(), 1, nil)
 }

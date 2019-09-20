@@ -11,13 +11,12 @@ import (
 	"os"
 	"strings"
 
-	"strvucks-go/src"
-	st "strvucks-go/src/strava"
-	"strvucks-go/src/swagger"
+	"strvucks-go/internal/app/handler"
+	"strvucks-go/internal/app/model"
+	"strvucks-go/pkg/swagger"
 
 	"github.com/antihax/optional"
 	"github.com/gin-gonic/gin"
-	"github.com/jinzhu/now"
 	"github.com/joho/godotenv"
 )
 
@@ -55,8 +54,8 @@ func main() {
 }
 
 func indexHandler(w http.ResponseWriter, r *http.Request) {
-	config := st.Config()
-	authURL, _ := url.QueryUnescape(config.AuthCodeURL("strvucks", st.AuthCodeOption()...))
+	config := handler.Config()
+	authURL, _ := url.QueryUnescape(config.AuthCodeURL("strvucks", handler.AuthCodeOption()...))
 
 	// you should make this a template in your real application
 	fmt.Fprintf(w, `<a href="%s">`, authURL)
@@ -83,7 +82,7 @@ func webhookVarifyHandler(c *gin.Context) {
 }
 
 func webhookHandler(c *gin.Context) {
-	event := src.WebhookEvent{}
+	event := model.WebhookEvent{}
 	if err := c.BindJSON(&event); err != nil {
 		log.Println("Invalid Webhook Body")
 		c.JSON(400, nil)
@@ -105,7 +104,7 @@ func webhookHandler(c *gin.Context) {
 		return
 	}
 
-	db := src.DB()
+	db := model.DB()
 	if err := db.Create(&event).Error; err != nil {
 		log.Println("Failure: ", err)
 		c.JSON(500, nil)
@@ -121,10 +120,10 @@ func webhookHandler(c *gin.Context) {
 	// postIfttt(summary, event.ObjectID)
 }
 
-func postIfttt(summary *src.Summary, activityID int64) {
-	db := src.DB()
+func postIfttt(summary *model.Summary, activityID int64) {
+	db := model.DB()
 
-	user := src.User{}
+	user := model.User{}
 	if err := db.Where("athlete_id = ?", summary.AthleteID).First(&user).Error; err != nil {
 		log.Println("Failure get user: ", err)
 		return
@@ -150,7 +149,7 @@ func postIfttt(summary *src.Summary, activityID int64) {
 	}
 	text := strings.Join(lines, " ")
 
-	body := src.IftttBody{
+	body := model.IftttBody{
 		Value1: text,
 	}
 
@@ -168,16 +167,16 @@ func postIfttt(summary *src.Summary, activityID int64) {
 	log.Println("Success post ifttt")
 }
 
-func updateSummary(activityID int64, athleteID int64) *src.Summary {
-	db := src.DB()
+func updateSummary(activityID int64, athleteID int64) *model.Summary {
+	db := model.DB()
 
-	permission := src.Permission{}
+	permission := model.Permission{}
 	if err := db.Where("athlete_id = ?", athleteID).First(&permission).Error; err != nil {
 		log.Println("Failure get permission: ", err)
 		return nil
 	}
 
-	client := st.Client(&permission)
+	client := handler.Client(&permission)
 	sconfig := swagger.NewConfiguration()
 	sconfig.HTTPClient = client
 	sclient := swagger.NewAPIClient(sconfig)
@@ -188,68 +187,13 @@ func updateSummary(activityID int64, athleteID int64) *src.Summary {
 		return nil
 	}
 
-	distance := float64(activity.Distance)
-	movingTime := int64(activity.MovingTime)
-	totalElevationGain := float64(activity.TotalElevationGain)
-	calories := float64(activity.Calories)
-
-	monthBaseDate := now.BeginningOfMonth()
-	weekBaseDate := now.BeginningOfWeek()
-
-	summary := src.Summary{}
-	if orm := db.Where("athlete_id = ?", athleteID).First(&summary); orm.RecordNotFound() {
-		summary.AthleteID = athleteID
-
-		summary.MonthlyCount = 1
-		summary.MonthlyDistance = distance
-		summary.MonthlyMovingTime = movingTime
-		summary.MonthlyTotalElevationGain = totalElevationGain
-		summary.MonthlyCalories = calories
-
-		summary.WeeklyCount = 1
-		summary.WeeklyDistance = distance
-		summary.WeeklyMovingTime = movingTime
-		summary.WeeklyTotalElevationGain = totalElevationGain
-		summary.WeeklyCalories = calories
-	} else if orm.Error != nil {
+	summary := model.Summary{}
+	if err := summary.FirstOrInit(db, athleteID).Error; err != nil {
 		log.Println("Failure get summary: ", err)
 		return nil
-	} else {
-		if monthBaseDate.Equal(summary.MonthBaseDate) {
-			summary.MonthlyCount++
-			summary.MonthlyDistance += distance
-			summary.MonthlyMovingTime += movingTime
-			summary.MonthlyTotalElevationGain += totalElevationGain
-			summary.MonthlyCalories += calories
-		} else {
-			summary.MonthlyCount = 1
-			summary.MonthlyDistance = distance
-			summary.MonthlyMovingTime = movingTime
-			summary.MonthlyTotalElevationGain = totalElevationGain
-			summary.MonthlyCalories = calories
-		}
-
-		if weekBaseDate.Equal(summary.WeekBaseDate) {
-			summary.WeeklyCount++
-			summary.WeeklyDistance += distance
-			summary.WeeklyMovingTime += movingTime
-			summary.WeeklyTotalElevationGain += totalElevationGain
-			summary.WeeklyCalories += calories
-		} else {
-			summary.WeeklyCount = 1
-			summary.WeeklyDistance = distance
-			summary.WeeklyMovingTime = movingTime
-			summary.WeeklyTotalElevationGain = totalElevationGain
-			summary.WeeklyCalories = calories
-		}
 	}
 
-	summary.MonthBaseDate = monthBaseDate
-	summary.WeekBaseDate = weekBaseDate
-	summary.LatestDistance = distance
-	summary.LatestMovingTime = movingTime
-	summary.LatestTotalElevationGain = totalElevationGain
-	summary.LatestCalories = calories
+	summary = summary.Migrate(&activity)
 
 	if err := summary.Save(db).Error; err != nil {
 		log.Println("Failure save summary: ", err)
@@ -264,7 +208,7 @@ func updateSummary(activityID int64, athleteID int64) *src.Summary {
 func exchangeToken(c *gin.Context) {
 	code := c.Query("code")
 
-	config := st.Config()
+	config := handler.Config()
 
 	token, err := config.Exchange(context.Background(), code)
 	if err != nil {
@@ -296,7 +240,7 @@ func exchangeToken(c *gin.Context) {
 	}
 	log.Println("Success get user from Strava response.", id, username)
 
-	permission := src.Permission{
+	permission := model.Permission{
 		AthleteID:    id,
 		AccessToken:  token.AccessToken,
 		TokenType:    token.TokenType,
@@ -304,9 +248,9 @@ func exchangeToken(c *gin.Context) {
 		Expiry:       token.Expiry.Unix(),
 	}
 
-	db := src.DB()
+	db := model.DB()
 
-	user := src.User{}
+	user := model.User{}
 	if orm := db.Where("athlete_id = ?", id).First(&user); orm.Error == nil || orm.RecordNotFound() {
 		user.AthleteID = id
 		user.Username = username
