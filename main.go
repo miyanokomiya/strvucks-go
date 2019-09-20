@@ -17,7 +17,6 @@ import (
 
 	"github.com/antihax/optional"
 	"github.com/gin-gonic/gin"
-	"github.com/jinzhu/now"
 	"github.com/joho/godotenv"
 )
 
@@ -188,68 +187,13 @@ func updateSummary(activityID int64, athleteID int64) *model.Summary {
 		return nil
 	}
 
-	distance := float64(activity.Distance)
-	movingTime := int64(activity.MovingTime)
-	totalElevationGain := float64(activity.TotalElevationGain)
-	calories := float64(activity.Calories)
-
-	monthBaseDate := now.BeginningOfMonth()
-	weekBaseDate := now.BeginningOfWeek()
-
 	summary := model.Summary{}
-	if orm := db.Where("athlete_id = ?", athleteID).First(&summary); orm.RecordNotFound() {
-		summary.AthleteID = athleteID
-
-		summary.MonthlyCount = 1
-		summary.MonthlyDistance = distance
-		summary.MonthlyMovingTime = movingTime
-		summary.MonthlyTotalElevationGain = totalElevationGain
-		summary.MonthlyCalories = calories
-
-		summary.WeeklyCount = 1
-		summary.WeeklyDistance = distance
-		summary.WeeklyMovingTime = movingTime
-		summary.WeeklyTotalElevationGain = totalElevationGain
-		summary.WeeklyCalories = calories
-	} else if orm.Error != nil {
+	if err := summary.FindOrNew(db, athleteID).Error; err != nil {
 		log.Println("Failure get summary: ", err)
 		return nil
-	} else {
-		if monthBaseDate.Equal(summary.MonthBaseDate) {
-			summary.MonthlyCount++
-			summary.MonthlyDistance += distance
-			summary.MonthlyMovingTime += movingTime
-			summary.MonthlyTotalElevationGain += totalElevationGain
-			summary.MonthlyCalories += calories
-		} else {
-			summary.MonthlyCount = 1
-			summary.MonthlyDistance = distance
-			summary.MonthlyMovingTime = movingTime
-			summary.MonthlyTotalElevationGain = totalElevationGain
-			summary.MonthlyCalories = calories
-		}
-
-		if weekBaseDate.Equal(summary.WeekBaseDate) {
-			summary.WeeklyCount++
-			summary.WeeklyDistance += distance
-			summary.WeeklyMovingTime += movingTime
-			summary.WeeklyTotalElevationGain += totalElevationGain
-			summary.WeeklyCalories += calories
-		} else {
-			summary.WeeklyCount = 1
-			summary.WeeklyDistance = distance
-			summary.WeeklyMovingTime = movingTime
-			summary.WeeklyTotalElevationGain = totalElevationGain
-			summary.WeeklyCalories = calories
-		}
 	}
 
-	summary.MonthBaseDate = monthBaseDate
-	summary.WeekBaseDate = weekBaseDate
-	summary.LatestDistance = distance
-	summary.LatestMovingTime = movingTime
-	summary.LatestTotalElevationGain = totalElevationGain
-	summary.LatestCalories = calories
+	summary = summary.Migrate(&activity)
 
 	if err := summary.Save(db).Error; err != nil {
 		log.Println("Failure save summary: ", err)

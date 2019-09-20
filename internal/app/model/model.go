@@ -2,7 +2,6 @@ package model
 
 import (
 	"os"
-	"time"
 
 	"github.com/jinzhu/gorm"
 
@@ -68,28 +67,6 @@ type WebhookEvent struct {
 	ObjectType     string `json:"object_type"`
 	OwnerID        int64  `json:"owner_id"`
 	SubscriptionID int64  `json:"subscription_id"`
-}
-
-// Summary model
-type Summary struct {
-	ID                        int64
-	AthleteID                 int64
-	LatestDistance            float64
-	LatestMovingTime          int64
-	LatestTotalElevationGain  float64
-	LatestCalories            float64
-	MonthBaseDate             time.Time
-	MonthlyCount              int64
-	MonthlyDistance           float64
-	MonthlyMovingTime         int64
-	MonthlyTotalElevationGain float64
-	MonthlyCalories           float64
-	WeekBaseDate              time.Time
-	WeeklyCount               int64
-	WeeklyDistance            float64
-	WeeklyMovingTime          int64
-	WeeklyTotalElevationGain  float64
-	WeeklyCalories            float64
 }
 
 type IftttBody struct {
