@@ -10,6 +10,30 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
+func TestFirstOrInit(t *testing.T) {
+	tx := DB().Begin()
+	defer tx.Rollback()
+
+	tx = tx.Save(&User{AthleteID: 1})
+	tx = tx.Save(&User{AthleteID: 2})
+
+	initial := Summary{}
+	if err := initial.FirstOrInit(tx, 1).Error; err != nil {
+		t.Fatal("cannot init summary", err)
+	}
+
+	assert.Equal(t, initial.AthleteID, int64(1), "init summary")
+
+	tx = tx.Create(&Summary{AthleteID: 2, LatestDistance: 10})
+
+	first := Summary{}
+	if err := first.FirstOrInit(tx, 2).Error; err != nil {
+		t.Fatal("cannot find summary", err)
+	}
+
+	assert.Equal(t, first.LatestDistance, 10.0, "find summary")
+}
+
 func TestMigrate(t *testing.T) {
 	format := "2006-01-02 15:04:05"
 	baseTime, _ := time.Parse(format, "2019-09-10 23:36:00")

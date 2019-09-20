@@ -13,3 +13,7 @@ goose/up:
 
 goose/create:
 	goose -dir ${GOOSE_DIR} ${GOOSE_DRIVER} ${GOOSE_CONNECTION} create ${ARG} sql
+
+test:
+	POSTGRES_DB=${POSTGRES_DB}_test make goose/up
+	POSTGRES_DB=${POSTGRES_DB}_test go test -v ./...

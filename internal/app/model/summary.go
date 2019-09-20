@@ -33,16 +33,9 @@ type Summary struct {
 	WeeklyCalories            float64
 }
 
-// FindOrNew Summary by AthleteID
-func (s *Summary) FindOrNew(db *gorm.DB, athleteID int64) *gorm.DB {
-	orm := db.Where("athlete_id = ?", athleteID).First(s)
-	if orm.RecordNotFound() {
-		s.AthleteID = athleteID
-		return db
-	} else if orm.Error != nil {
-		return orm
-	}
-	return db
+// FirstOrInit Summary by AthleteID
+func (s *Summary) FirstOrInit(db *gorm.DB, athleteID int64) *gorm.DB {
+	return db.FirstOrInit(s, Summary{AthleteID: athleteID})
 }
 
 // Migrate Summary

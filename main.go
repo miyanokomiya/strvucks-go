@@ -188,7 +188,7 @@ func updateSummary(activityID int64, athleteID int64) *model.Summary {
 	}
 
 	summary := model.Summary{}
-	if err := summary.FindOrNew(db, athleteID).Error; err != nil {
+	if err := summary.FirstOrInit(db, athleteID).Error; err != nil {
 		log.Println("Failure get summary: ", err)
 		return nil
 	}

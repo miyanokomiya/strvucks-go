@@ -15,5 +15,5 @@ docker-compose up
 
 ### Run tests
 ```sh
-go test -v ./...
+docker-compose exec server make test
 ```
