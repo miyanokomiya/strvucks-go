@@ -96,15 +96,3 @@ func (permission *Permission) Save(db *gorm.DB) *gorm.DB {
 		return orm
 	}
 }
-
-func (summary *Summary) Save(db *gorm.DB) *gorm.DB {
-	old := Summary{ID: summary.ID}
-	if orm := db.Find(&old); orm.RecordNotFound() {
-		return db.Create(summary)
-	} else if orm.Error == nil {
-		summary.ID = old.ID
-		return db.Save(summary)
-	} else {
-		return orm
-	}
-}

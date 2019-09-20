@@ -22,7 +22,7 @@ func TestFirstOrInit(t *testing.T) {
 		t.Fatal("cannot init summary", err)
 	}
 
-	assert.Equal(t, initial.AthleteID, int64(1), "init summary")
+	assert.Equal(t, int64(1), initial.AthleteID, "init summary")
 
 	tx = tx.Create(&Summary{AthleteID: 2, LatestDistance: 10})
 
@@ -31,7 +31,32 @@ func TestFirstOrInit(t *testing.T) {
 		t.Fatal("cannot find summary", err)
 	}
 
-	assert.Equal(t, first.LatestDistance, 10.0, "find summary")
+	assert.Equal(t, 10.0, first.LatestDistance, "find summary")
+}
+
+func TestSave(t *testing.T) {
+	tx := DB().Begin()
+	defer tx.Rollback()
+
+	tx = tx.Save(&User{AthleteID: 1})
+	tx = tx.Save(&User{AthleteID: 2})
+
+	initial := Summary{AthleteID: 1}
+	if err := initial.Save(tx).Error; err != nil {
+		t.Fatal("cannot create summary", err)
+	}
+
+	assert.Equal(t, int64(1), initial.AthleteID, "create summary")
+
+	exist := Summary{AthleteID: 2, LatestDistance: 10}
+	tx = tx.Create(&exist)
+
+	first := Summary{ID: exist.ID, AthleteID: 2, LatestDistance: 20}
+	if err := first.Save(tx).Error; err != nil {
+		t.Fatal("cannot update summary", err)
+	}
+
+	assert.Equal(t, 20.0, first.LatestDistance, "update summary")
 }
 
 func TestMigrate(t *testing.T) {

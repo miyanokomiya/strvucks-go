@@ -38,6 +38,11 @@ func (s *Summary) FirstOrInit(db *gorm.DB, athleteID int64) *gorm.DB {
 	return db.FirstOrInit(s, Summary{AthleteID: athleteID})
 }
 
+// Save Summary
+func (summary *Summary) Save(db *gorm.DB) *gorm.DB {
+	return db.Save(summary)
+}
+
 // Migrate Summary
 func (s Summary) Migrate(activity *swagger.DetailedActivity) Summary {
 	n := now.New(activity.StartDate)
