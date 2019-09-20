@@ -12,7 +12,7 @@ install:
   - go get github.com/mattn/goveralls
 
 before_script:
-  - psql -c 'create database $POSTGRES_DB;' -U $POSTGRES_USER
+  - psql -c 'create database db;' -U postgres
   - make goose/up
 
 script:
