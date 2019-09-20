@@ -1,7 +1,7 @@
 language: go
 
 env:
-  - GO111MODULE=on POSTGRES_USER=postgres POSTGRES_PASSWORD=void POSTGRES_DB=db DB_HOST=localhost
+  - GO111MODULE=on POSTGRES_USER=postgres POSTGRES_DB=db DB_HOST=localhost
 
 services:
   - postgresql
@@ -10,6 +10,7 @@ install:
   - go mod download
   - go get golang.org/x/tools/cmd/cover
   - go get github.com/mattn/goveralls
+  - go get github.com/pressly/goose/cmd/goose
 
 before_script:
   - psql -c 'create database db;' -U postgres
