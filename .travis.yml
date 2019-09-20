@@ -2,11 +2,21 @@ language: go
 
 env:
   - GO111MODULE=on
+  - POSTGRES_USER=postgres
+  - POSTGRES_DB=db
+  - DB_HOST=localhost
+
+services:
+  - postgresql
 
 install:
   - go mod download
   - go get golang.org/x/tools/cmd/cover
   - go get github.com/mattn/goveralls
+
+before_script:
+  - psql -c 'create database $POSTGRES_DB;' -U $POSTGRES_USER
+  - make goose/up
 
 script:
   - go test -v ./... -covermode=count -coverprofile=coverage.out
