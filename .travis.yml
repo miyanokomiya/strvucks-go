@@ -1,7 +1,7 @@
 language: go
 
 env:
-  - GO111MODULE=on POSTGRES_USER=postgres POSTGRES_PASSWORD="" POSTGRES_DB=db DB_HOST=localhost
+  - GO111MODULE=on POSTGRES_USER=postgres POSTGRES_PASSWORD=void POSTGRES_DB=db DB_HOST=localhost
 
 services:
   - postgresql
