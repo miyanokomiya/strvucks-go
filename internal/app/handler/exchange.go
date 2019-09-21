@@ -49,13 +49,6 @@ func ExchangeToken(c *gin.Context) {
 		return
 	}
 
-	db := model.DB()
-	if err := db.FirstOrInit(&user).Error; err != nil {
-		log.Error("Failure get user.")
-		c.String(500, "Failure get user.")
-		return
-	}
-
 	permission := model.Permission{
 		AthleteID:    user.AthleteID,
 		AccessToken:  token.AccessToken,
@@ -64,7 +57,10 @@ func ExchangeToken(c *gin.Context) {
 		Expiry:       token.Expiry.Unix(),
 	}
 
-	tx := db.Begin().Save(&permission).Save(&user).Commit()
+	tx := model.DB().Begin()
+	tx = user.Save(tx)
+	tx = permission.Save(tx)
+	tx = tx.Commit()
 	if err := tx.Error; err != nil {
 		tx.Rollback()
 		log.Error("Failure save token & user.")

@@ -60,18 +60,18 @@ type WebhookEvent struct {
 	SubscriptionID int64  `json:"subscription_id"`
 }
 
+// IftttBody model
 type IftttBody struct {
 	Value1 string `json:"value1"`
 }
 
-func (permission *Permission) Save(db *gorm.DB) *gorm.DB {
+// Save Permission by treating AthleteID as primaly
+func (p *Permission) Save(db *gorm.DB) *gorm.DB {
 	old := Permission{}
-	if orm := db.Where("athlete_id = ?", permission.AthleteID).First(&old); orm.RecordNotFound() {
-		return db.Create(permission)
-	} else if orm.Error == nil {
-		permission.ID = old.ID
-		return db.Save(permission)
-	} else {
+	if orm := db.FirstOrInit(&old, Permission{AthleteID: p.AthleteID}); orm.Error != nil {
 		return orm
 	}
+
+	p.ID = old.ID
+	return db.Save(p)
 }

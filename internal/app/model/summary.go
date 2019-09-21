@@ -40,8 +40,14 @@ func (s *Summary) FirstOrInit(db *gorm.DB, athleteID int64) *gorm.DB {
 	return db.FirstOrInit(s, Summary{AthleteID: athleteID})
 }
 
-// Save Summary
+// Save Summary by treating AthleteID as primaly
 func (s *Summary) Save(db *gorm.DB) *gorm.DB {
+	old := Summary{}
+	if orm := db.FirstOrInit(&old, Summary{AthleteID: s.AthleteID}); orm.Error != nil {
+		return orm
+	}
+
+	s.ID = old.ID
 	return db.Save(s)
 }
 

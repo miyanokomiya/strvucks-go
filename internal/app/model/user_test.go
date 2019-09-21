@@ -41,7 +41,7 @@ func TestUserSave(t *testing.T) {
 	exist := User{AthleteID: 2, Username: "10"}
 	tx = tx.Create(&exist)
 
-	first := User{ID: exist.ID, AthleteID: 2, Username: "20"}
+	first := User{AthleteID: 2, Username: "20"}
 	if err := first.Save(tx).Error; err != nil {
 		t.Fatal("cannot update user", err)
 	}

@@ -52,7 +52,7 @@ func TestSave(t *testing.T) {
 	exist := Summary{AthleteID: 2, LatestDistance: 10}
 	tx = tx.Create(&exist)
 
-	first := Summary{ID: exist.ID, AthleteID: 2, LatestDistance: 20}
+	first := Summary{AthleteID: 2, LatestDistance: 20}
 	if err := first.Save(tx).Error; err != nil {
 		t.Fatal("cannot update summary", err)
 	}
