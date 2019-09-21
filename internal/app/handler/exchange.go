@@ -37,10 +37,11 @@ func ExchangeToken(c *gin.Context) {
 	config := Config()
 	token, err := config.Exchange(context.Background(), code)
 	if err != nil {
-		log.Error("Failure exchange token.")
-		c.String(400, "Failure exchange token.")
+		log.Error("Failure exchange token.", err)
+		c.String(400, "Failure exchange token")
 		return
 	}
+	log.Info("Success exchange token")
 
 	user := parseAthlete(token)
 	if user == nil {
@@ -48,8 +49,12 @@ func ExchangeToken(c *gin.Context) {
 		c.String(400, "Failure get athlete from Strava response.")
 		return
 	}
+	log.WithFields(log.Fields{
+		"AthleteID": user.AthleteID,
+		"Username":  user.Username,
+	}).Info("Success get athlete")
 
-	permission := model.Permission{
+	permission := &model.Permission{
 		AthleteID:    user.AthleteID,
 		AccessToken:  token.AccessToken,
 		TokenType:    token.TokenType,
@@ -57,16 +62,24 @@ func ExchangeToken(c *gin.Context) {
 		Expiry:       token.Expiry.Unix(),
 	}
 
+	if err := saveUserAndPermission(user, permission); err != nil {
+		log.Error("Failure save token & user", err)
+		c.String(500, "Failure save token & user")
+		return
+	}
+	log.Info("Success save token & user")
+
+	c.Redirect(200, "/?auth=success")
+}
+
+func saveUserAndPermission(user *model.User, permission *model.Permission) error {
 	tx := model.DB().Begin()
 	tx = user.Save(tx)
 	tx = permission.Save(tx)
-	tx = tx.Commit()
-	if err := tx.Error; err != nil {
+	if err := tx.Commit().Error; err != nil {
 		tx.Rollback()
-		log.Error("Failure save token & user.")
-		c.String(500, "Failure save token & user.")
-		return
+		return err
 	}
 
-	c.Redirect(200, "/?auth=success")
+	return nil
 }
