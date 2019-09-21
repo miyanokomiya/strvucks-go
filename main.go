@@ -37,7 +37,7 @@ func main() {
 		handler.ExchangeToken(c)
 	})
 
-	webhook := handler.Webhook{&handler.WebhookClientImpl{}}
+	webhook := handler.NewWebhook()
 	r.GET("/webhooks", func(c *gin.Context) {
 		webhook.WebhookVarifyHandler(c)
 	})

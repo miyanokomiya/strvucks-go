@@ -1,7 +1,7 @@
 package handler
 
 import (
-	"fmt"
+	"errors"
 	"testing"
 
 	"strvucks-go/internal/app/model"
@@ -15,9 +15,13 @@ type WebhookClientMock struct {
 	E error
 }
 
-func (w *WebhookClientMock) GetActivity(activityID int64, permission *model.Permission) (*swagger.DetailedActivity, error) {
+func (w *WebhookClientMock) getActivity(activityID int64, permission *model.Permission) (*swagger.DetailedActivity, error) {
 
 	return w.A, w.E
+}
+
+func (w *WebhookClientMock) postTextToIfttt(text string, user *model.User) error {
+	return w.E
 }
 
 func TestUpdateSummary(t *testing.T) {
@@ -26,7 +30,7 @@ func TestUpdateSummary(t *testing.T) {
 	user := model.User{AthleteID: 1}
 	permission := model.Permission{AthleteID: user.AthleteID}
 	if err := db.Save(&user).Save(&permission).Error; err != nil {
-		t.Error("cannot prepare", err)
+		t.Fatal("cannot prepare", err)
 	}
 	defer db.Delete(&user).Delete(&permission)
 
@@ -34,7 +38,31 @@ func TestUpdateSummary(t *testing.T) {
 	summaryAct := webhookAct.updateSummary(100, 1)
 	assert.Equal(t, int64(1), summaryAct.WeeklyCount, "get updated summary if activity exists")
 
-	webhookNoAct := Webhook{&WebhookClientMock{nil, fmt.Errorf("error")}}
+	webhookNoAct := Webhook{&WebhookClientMock{nil, errors.New("error")}}
 	summaryNoAct := webhookNoAct.updateSummary(100, 1)
 	assert.Nil(t, summaryNoAct, "get nil if no activity")
+}
+
+func TestPostSummaryToIfttt(t *testing.T) {
+	db := model.DB()
+
+	user := model.User{AthleteID: 1}
+	if err := db.Save(&user).Error; err != nil {
+		t.Fatal("cannot prepare", err)
+	}
+	defer db.Delete(&user)
+
+	validSummary := model.Summary{AthleteID: 1}
+	invalidSummary := model.Summary{AthleteID: 2}
+
+	successHook := Webhook{&WebhookClientMock{nil, nil}}
+	successRet := successHook.postSummaryToIfttt(&validSummary, 1)
+	assert.Nil(t, successRet, "return nil if success post IFTTT")
+
+	invalidAthleteRet := successHook.postSummaryToIfttt(&invalidSummary, 1)
+	assert.NotNil(t, invalidAthleteRet, "return error if invalid athlete")
+
+	failureHook := Webhook{&WebhookClientMock{nil, errors.New("error")}}
+	failureRet := failureHook.postSummaryToIfttt(&validSummary, 1)
+	assert.NotNil(t, failureRet, "return error if success post IFTTT")
 }
