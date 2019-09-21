@@ -1,6 +1,8 @@
 package model
 
 import (
+	"fmt"
+	"strings"
 	"time"
 
 	"strvucks-go/pkg/swagger"
@@ -89,4 +91,26 @@ func (s Summary) Migrate(activity *swagger.DetailedActivity) Summary {
 	s.LatestCalories = calories
 
 	return s
+}
+
+// GenerateText generates text from Summary
+func (summary *Summary) GenerateText(activityID int64) string {
+	lines := []string{
+		"New Act:",
+		fmt.Sprintf("%.2fkm", summary.LatestDistance/1000),
+		fmt.Sprintf("%dmin", summary.LatestMovingTime/60),
+		fmt.Sprintf("%.0fkcal", summary.LatestCalories),
+		"\nWeekly:",
+		fmt.Sprintf("%.2fkm", summary.WeeklyDistance/1000),
+		fmt.Sprintf("%dmin", summary.WeeklyMovingTime/60),
+		fmt.Sprintf("%.0fkcal", summary.WeeklyCalories),
+		fmt.Sprintf("(%d)", summary.WeeklyCount),
+		"\nMonthly:",
+		fmt.Sprintf("%.2fkm", summary.MonthlyDistance/1000),
+		fmt.Sprintf("%dmin", summary.MonthlyMovingTime/60),
+		fmt.Sprintf("%.0fkcal", summary.MonthlyCalories),
+		fmt.Sprintf("(%d)", summary.MonthlyCount),
+		fmt.Sprintf("\nhttps://www.strava.com/activities/%d", activityID),
+	}
+	return strings.Join(lines, " ")
 }

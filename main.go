@@ -1,21 +1,17 @@
 package main
 
 import (
-	"bytes"
 	"context"
-	"encoding/json"
 	"fmt"
-	"log"
 	"net/http"
 	"net/url"
 	"os"
-	"strings"
 
 	"strvucks-go/internal/app/handler"
 	"strvucks-go/internal/app/model"
-	"strvucks-go/pkg/swagger"
 
-	"github.com/antihax/optional"
+	log "github.com/sirupsen/logrus"
+
 	"github.com/gin-gonic/gin"
 	"github.com/joho/godotenv"
 )
@@ -23,7 +19,7 @@ import (
 func main() {
 	err := godotenv.Load(".env")
 	if err != nil {
-		log.Println("Not found .env file")
+		log.Info("Not found .env file")
 	}
 
 	r := gin.Default()
@@ -44,10 +40,10 @@ func main() {
 	})
 
 	r.GET("/webhooks", func(c *gin.Context) {
-		webhookVarifyHandler(c)
+		handler.WebhookVarifyHandler(c)
 	})
 	r.POST("/webhooks", func(c *gin.Context) {
-		webhookHandler(c)
+		handler.WebhookHandler(c)
 	})
 
 	r.Run(":" + os.Getenv("PORT"))
@@ -64,147 +60,6 @@ func indexHandler(w http.ResponseWriter, r *http.Request) {
 	fmt.Fprint(w, `</a>`)
 }
 
-func webhookVarifyHandler(c *gin.Context) {
-	mode := c.Query("hub.mode")
-	token := c.Query("hub.verify_token")
-	challenge := c.Query("hub.challenge")
-
-	if mode != "" && token != "" {
-		if mode == "subscribe" && token == os.Getenv("STRAVA_VERIFY_TOKEN") {
-			log.Println("WEBHOOK_VERIFIED")
-			c.JSON(200, gin.H{
-				"hub.challenge": challenge,
-			})
-		} else {
-			c.JSON(403, nil)
-		}
-	}
-}
-
-func webhookHandler(c *gin.Context) {
-	event := model.WebhookEvent{}
-	if err := c.BindJSON(&event); err != nil {
-		log.Println("Invalid Webhook Body")
-		c.JSON(400, nil)
-		return
-	}
-
-	log.Println("activityID: ", event.ObjectID)
-	log.Println("athleteID: ", event.OwnerID)
-
-	if event.ObjectType != "activity" {
-		log.Println("Not an activity event and ignore")
-		c.JSON(200, nil)
-		return
-	}
-
-	if event.AspectType != "create" {
-		log.Println("Not an create event and ignore")
-		c.JSON(200, nil)
-		return
-	}
-
-	db := model.DB()
-	if err := db.Create(&event).Error; err != nil {
-		log.Println("Failure: ", err)
-		c.JSON(500, nil)
-		return
-	}
-
-	summary := updateSummary(event.ObjectID, event.OwnerID)
-	if summary == nil {
-		log.Println("Failure get summary")
-		return
-	}
-
-	// postIfttt(summary, event.ObjectID)
-}
-
-func postIfttt(summary *model.Summary, activityID int64) {
-	db := model.DB()
-
-	user := model.User{}
-	if err := db.Where("athlete_id = ?", summary.AthleteID).First(&user).Error; err != nil {
-		log.Println("Failure get user: ", err)
-		return
-	}
-
-	lines := []string{
-		"New Act:",
-		fmt.Sprintf("%.2fkm", summary.LatestDistance/1000),
-		fmt.Sprintf("%dmin", summary.LatestMovingTime/60),
-		fmt.Sprintf("%.0fkcal", summary.LatestCalories),
-		"\nWeekly:",
-		fmt.Sprintf("%.2fkm", summary.WeeklyDistance/1000),
-		fmt.Sprintf("%dmin", summary.WeeklyMovingTime/60),
-		fmt.Sprintf("%.0fkcal", summary.WeeklyCalories),
-		fmt.Sprintf("(%d)", summary.WeeklyCount),
-		"\nMonthly:",
-		fmt.Sprintf("%.2fkm", summary.MonthlyDistance/1000),
-		fmt.Sprintf("%dmin", summary.MonthlyMovingTime/60),
-		fmt.Sprintf("%.0fkcal", summary.MonthlyCalories),
-		fmt.Sprintf("(%d)", summary.MonthlyCount),
-		"\n",
-		fmt.Sprintf("https://www.strava.com/activities/%d", activityID),
-	}
-	text := strings.Join(lines, " ")
-
-	body := model.IftttBody{
-		Value1: text,
-	}
-
-	buff := new(bytes.Buffer)
-	json.NewEncoder(buff).Encode(body)
-
-	iftttURL := fmt.Sprintf("https://maker.ifttt.com/trigger/%s/with/key/%s", user.IftttMessage, user.IftttKey)
-
-	response, err := http.Post(iftttURL, "application/json; charset=utf-8", buff)
-	if err != nil {
-		log.Println("Failure post ifttt: ", err)
-		return
-	}
-	fmt.Println(response)
-	log.Println("Success post ifttt")
-}
-
-func updateSummary(activityID int64, athleteID int64) *model.Summary {
-	db := model.DB()
-
-	permission := model.Permission{}
-	if err := db.Where("athlete_id = ?", athleteID).First(&permission).Error; err != nil {
-		log.Println("Failure get permission: ", err)
-		return nil
-	}
-
-	client := handler.Client(&permission)
-	sconfig := swagger.NewConfiguration()
-	sconfig.HTTPClient = client
-	sclient := swagger.NewAPIClient(sconfig)
-	activity, _, err := sclient.ActivitiesApi.GetActivityById(context.Background(), activityID, &swagger.GetActivityByIdOpts{IncludeAllEfforts: optional.EmptyBool()})
-
-	if err != nil {
-		log.Println("Failure get activity: ", err)
-		return nil
-	}
-
-	summary := model.Summary{}
-	if err := summary.FirstOrInit(db, athleteID).Error; err != nil {
-		log.Println("Failure get summary: ", err)
-		return nil
-	}
-
-	summary = summary.Migrate(&activity)
-
-	if err := summary.Save(db).Error; err != nil {
-		log.Println("Failure save summary: ", err)
-		return nil
-	}
-
-	log.Println("Success save summary: ", summary)
-
-	return &summary
-}
-
 func exchangeToken(c *gin.Context) {
 	code := c.Query("code")
 
@@ -212,21 +67,21 @@ func exchangeToken(c *gin.Context) {
 
 	token, err := config.Exchange(context.Background(), code)
 	if err != nil {
-		log.Println("Failure exchange token.")
+		log.Error("Failure exchange token.")
 		c.String(400, "Failure exchange token.")
 		return
 	}
 
 	athlete, ok := token.Extra("athlete").(map[string]interface{})
 	if !ok {
-		log.Println("Failure get athlete from Strava response.")
+		log.Error("Failure get athlete from Strava response.")
 		c.String(400, "Failure get athlete from Strava response.")
 		return
 	}
 
 	idFloat, ok := athlete["id"].(float64)
 	if !ok {
-		log.Println("Failure get athlete from Strava response.")
+		log.Error("Failure get athlete from Strava response.")
 		c.String(400, "Failure get athlete from Strava response.")
 		return
 	}
@@ -234,11 +89,12 @@ func exchangeToken(c *gin.Context) {
 
 	username, ok := athlete["username"].(string)
 	if !ok {
-		log.Println("Failure get athlete from Strava response.")
+		log.Error("Failure get athlete from Strava response.")
 		c.String(400, "Failure get athlete from Strava response.")
 		return
 	}
-	log.Println("Success get user from Strava response.", id, username)
+
+	log.Info("Success get user from Strava response.", id, username)
 
 	permission := model.Permission{
 		AthleteID:    id,
@@ -255,7 +111,7 @@ func exchangeToken(c *gin.Context) {
 		user.AthleteID = id
 		user.Username = username
 	} else {
-		log.Println("Failure get user.")
+		log.Error("Failure get user.")
 		c.String(500, "Failure get user.")
 		return
 	}
@@ -266,13 +122,13 @@ func exchangeToken(c *gin.Context) {
 
 	if err := tx.Error; err != nil {
 		tx.Rollback()
-		log.Println("Failure save token & user.")
+		log.Error("Failure save token & user.")
 		c.String(500, "Failure save token & user.")
 		return
 	}
 
 	if err := tx.Commit().Error; err != nil {
-		log.Println("Failure save token & user.")
+		log.Error("Failure save token & user.")
 		c.String(500, "Failure save token & user.")
 		return
 	}
