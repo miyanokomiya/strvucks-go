@@ -41,8 +41,8 @@ func (s *Summary) FirstOrInit(db *gorm.DB, athleteID int64) *gorm.DB {
 }
 
 // Save Summary
-func (summary *Summary) Save(db *gorm.DB) *gorm.DB {
-	return db.Save(summary)
+func (s *Summary) Save(db *gorm.DB) *gorm.DB {
+	return db.Save(s)
 }
 
 // Migrate Summary
@@ -94,22 +94,22 @@ func (s Summary) Migrate(activity *swagger.DetailedActivity) Summary {
 }
 
 // GenerateText generates text from Summary
-func (summary *Summary) GenerateText(activityID int64) string {
+func (s *Summary) GenerateText(activityID int64) string {
 	lines := []string{
 		"New Act:",
-		fmt.Sprintf("%.2fkm", summary.LatestDistance/1000),
-		fmt.Sprintf("%dmin", summary.LatestMovingTime/60),
-		fmt.Sprintf("%.0fkcal", summary.LatestCalories),
+		fmt.Sprintf("%.2fkm", s.LatestDistance/1000),
+		fmt.Sprintf("%dmin", s.LatestMovingTime/60),
+		fmt.Sprintf("%.0fkcal", s.LatestCalories),
 		"\nWeekly:",
-		fmt.Sprintf("%.2fkm", summary.WeeklyDistance/1000),
-		fmt.Sprintf("%dmin", summary.WeeklyMovingTime/60),
-		fmt.Sprintf("%.0fkcal", summary.WeeklyCalories),
-		fmt.Sprintf("(%d)", summary.WeeklyCount),
+		fmt.Sprintf("%.2fkm", s.WeeklyDistance/1000),
+		fmt.Sprintf("%dmin", s.WeeklyMovingTime/60),
+		fmt.Sprintf("%.0fkcal", s.WeeklyCalories),
+		fmt.Sprintf("(%d)", s.WeeklyCount),
 		"\nMonthly:",
-		fmt.Sprintf("%.2fkm", summary.MonthlyDistance/1000),
-		fmt.Sprintf("%dmin", summary.MonthlyMovingTime/60),
-		fmt.Sprintf("%.0fkcal", summary.MonthlyCalories),
-		fmt.Sprintf("(%d)", summary.MonthlyCount),
+		fmt.Sprintf("%.2fkm", s.MonthlyDistance/1000),
+		fmt.Sprintf("%dmin", s.MonthlyMovingTime/60),
+		fmt.Sprintf("%.0fkcal", s.MonthlyCalories),
+		fmt.Sprintf("(%d)", s.MonthlyCount),
 		fmt.Sprintf("\nhttps://www.strava.com/activities/%d", activityID),
 	}
 	return strings.Join(lines, " ")

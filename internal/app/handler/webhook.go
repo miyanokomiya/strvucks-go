@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
-	"fmt"
 	"net/http"
 	"os"
 
@@ -74,7 +73,7 @@ func WebhookHandler(c *gin.Context) {
 		return
 	}
 
-	postIfttt(summary, event.ObjectID)
+	postSummaryToIfttt(summary, event.ObjectID)
 }
 
 func getActivity(activityID int64, athleteID int64) *swagger.DetailedActivity {
@@ -124,39 +123,33 @@ func updateSummary(activityID int64, athleteID int64) *model.Summary {
 	return &summary
 }
 
-func getIftttURL(athleteID int64) string {
-	db := model.DB()
-	user := model.User{}
-	if err := db.Where("athlete_id = ?", athleteID).First(&user).Error; err != nil {
-		log.Error("Failure get user:", err)
-		return ""
-	}
-
-	return fmt.Sprintf("https://maker.ifttt.com/trigger/%s/with/key/%s", user.IftttMessage, user.IftttKey)
-}
-
-func postIfttt(summary *model.Summary, activityID int64) {
+func postSummaryToIfttt(summary *model.Summary, activityID int64) {
 	l := log.WithFields(log.Fields{"activityID": activityID, "summaryID": summary.ID})
 	l.Info("Start post summary to IFTTT")
 
 	text := summary.GenerateText(activityID)
-	body := model.IftttBody{
-		Value1: text,
-	}
-
-	buff := new(bytes.Buffer)
-	json.NewEncoder(buff).Encode(body)
-
-	iftttURL := getIftttURL(summary.AthleteID)
-	if iftttURL == "" {
+	user := model.User{}
+	if err := model.DB().First(&user, model.User{AthleteID: summary.AthleteID}).Error; err != nil {
+		l.Error("Failure get user:", err)
 		return
 	}
 
-	_, err := http.Post(iftttURL, "application/json; charset=utf-8", buff)
-	if err != nil {
+	if err := postTextToIfttt(text, &user); err != nil {
 		l.Error("Failure post summary to IFTTT:", err)
 		return
 	}
 
 	l.Info("Success post summary to IFTTT")
+}
+
+func postTextToIfttt(text string, user *model.User) error {
+	iftttURL := user.IftttURL()
+	body := model.IftttBody{
+		Value1: text,
+	}
+	buff := new(bytes.Buffer)
+	json.NewEncoder(buff).Encode(body)
+
+	_, err := http.Post(iftttURL, "application/json; charset=utf-8", buff)
+	return err
 }
