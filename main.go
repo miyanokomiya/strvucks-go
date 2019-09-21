@@ -37,11 +37,12 @@ func main() {
 		handler.ExchangeToken(c)
 	})
 
+	webhook := handler.Webhook{&handler.WebhookClientImpl{}}
 	r.GET("/webhooks", func(c *gin.Context) {
-		handler.WebhookVarifyHandler(c)
+		webhook.WebhookVarifyHandler(c)
 	})
 	r.POST("/webhooks", func(c *gin.Context) {
-		handler.WebhookHandler(c)
+		webhook.WebhookHandler(c)
 	})
 
 	r.Run(":" + os.Getenv("PORT"))

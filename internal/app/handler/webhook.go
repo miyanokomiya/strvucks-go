@@ -16,8 +16,27 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
+type Webhook struct {
+	WebhookClient WebhookClient
+}
+
+type WebhookClient interface {
+	GetActivity(activityID int64, permission *model.Permission) (*swagger.DetailedActivity, error)
+}
+
+type WebhookClientImpl struct{}
+
+func (w *WebhookClientImpl) GetActivity(activityID int64, permission *model.Permission) (*swagger.DetailedActivity, error) {
+	config := swagger.NewConfiguration()
+	config.HTTPClient = Client(permission)
+	client := swagger.NewAPIClient(config)
+	activity, _, err := client.ActivitiesApi.GetActivityById(context.Background(), activityID, &swagger.GetActivityByIdOpts{IncludeAllEfforts: optional.EmptyBool()})
+
+	return &activity, err
+}
+
 // WebhookVarifyHandler varifies webhook from Strava
-func WebhookVarifyHandler(c *gin.Context) {
+func (w *Webhook) WebhookVarifyHandler(c *gin.Context) {
 	mode := c.Query("hub.mode")
 	token := c.Query("hub.verify_token")
 	challenge := c.Query("hub.challenge")
@@ -35,7 +54,7 @@ func WebhookVarifyHandler(c *gin.Context) {
 }
 
 // WebhookHandler handles webhook from Strava
-func WebhookHandler(c *gin.Context) {
+func (w *Webhook) WebhookHandler(c *gin.Context) {
 	event := model.WebhookEvent{}
 	if err := c.BindJSON(&event); err != nil {
 		log.Error("Invalid Webhook Body", err)
@@ -43,35 +62,41 @@ func WebhookHandler(c *gin.Context) {
 		return
 	}
 
-	log.Println("activityID:", event.ObjectID)
-	log.Println("athleteID:", event.OwnerID)
+	l := log.WithFields(log.Fields{"activityID": event.ObjectID})
 
 	if event.ObjectType != "activity" {
-		log.Info("Not an activity event and ignore")
+		l.Info("Not activity event and ignore")
 		c.JSON(200, nil)
 		return
 	}
 
 	if event.AspectType != "create" {
-		log.Info("Not an create event and ignore")
+		l.Info("Not create event and ignore")
 		c.JSON(200, nil)
 		return
 	}
 
 	db := model.DB()
 	if err := db.Create(&event).Error; err != nil {
-		log.Error("Failure:", err)
+		l.Error("Failure create event:", err)
 		c.JSON(500, nil)
 		return
 	}
 
 	c.JSON(200, nil)
 
-	summary := updateSummary(event.ObjectID, event.OwnerID)
+	summary := w.updateSummary(event.ObjectID, event.OwnerID)
 	if summary == nil {
-		log.Error("Failure get summary")
+		l.Error("Failure update summary")
 		return
 	}
+
+	if err := summary.Save(db).Error; err != nil {
+		l.Error("Failure save summary:", err)
+		return
+	}
+
+	l.Info("Success save summary")
 
 	postSummaryToIfttt(summary, event.ObjectID)
 }
@@ -101,8 +126,19 @@ func getActivity(activityID int64, athleteID int64) *swagger.DetailedActivity {
 	return &activity
 }
 
-func updateSummary(activityID int64, athleteID int64) *model.Summary {
-	activity := getActivity(activityID, athleteID)
+func (w *Webhook) updateSummary(activityID int64, athleteID int64) *model.Summary {
+	permission := model.Permission{}
+	if err := model.DB().First(&permission, model.Permission{AthleteID: athleteID}).Error; err != nil {
+		log.Error("Failure get permission of Strava:", err)
+		return nil
+	}
+
+	activity, err := w.WebhookClient.GetActivity(activityID, &permission)
+	if err != nil {
+		log.Error("Failure get activity from Strava:", err)
+		return nil
+	}
+
 	db := model.DB()
 	summary := model.Summary{}
 
@@ -112,13 +148,6 @@ func updateSummary(activityID int64, athleteID int64) *model.Summary {
 	}
 
 	summary = summary.Migrate(activity)
-
-	if err := summary.Save(db).Error; err != nil {
-		log.Error("Failure save summary:", err)
-		return nil
-	}
-
-	log.Info("Success save summary")
 
 	return &summary
 }
