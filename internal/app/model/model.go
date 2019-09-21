@@ -39,15 +39,6 @@ type Athlete struct {
 	Username string `json:"username"`
 }
 
-// User model
-type User struct {
-	ID           int64
-	AthleteID    int64
-	Username     string
-	IftttKey     string
-	IftttMessage string
-}
-
 // Permission model
 type Permission struct {
 	ID           int64
@@ -71,18 +62,6 @@ type WebhookEvent struct {
 
 type IftttBody struct {
 	Value1 string `json:"value1"`
-}
-
-func (user *User) Save(db *gorm.DB) *gorm.DB {
-	old := User{}
-	if orm := db.Where("athlete_id = ?", user.AthleteID).First(&old); orm.RecordNotFound() {
-		return db.Create(user)
-	} else if orm.Error == nil {
-		user.ID = old.ID
-		return db.Save(user)
-	} else {
-		return orm
-	}
 }
 
 func (permission *Permission) Save(db *gorm.DB) *gorm.DB {

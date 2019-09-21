@@ -1,6 +1,7 @@
 package model
 
 import (
+	"strings"
 	"testing"
 	"time"
 
@@ -178,4 +179,34 @@ func TestMigrate(t *testing.T) {
 	for _, d := range data {
 		assert.Equal(t, d.exp, summary.Migrate(&d.act), d.mes)
 	}
+}
+
+func TestGenerateText(t *testing.T) {
+	format := "2006-01-02 15:04:05"
+	baseTime, _ := time.Parse(format, "2019-09-10 23:36:00")
+
+	s := Summary{
+		LatestDistance:    1100,
+		LatestMovingTime:  121,
+		LatestCalories:    1400,
+		MonthBaseDate:     now.New(baseTime).BeginningOfMonth(),
+		MonthlyCount:      3,
+		MonthlyDistance:   2100,
+		MonthlyMovingTime: 182,
+		MonthlyCalories:   2400,
+		WeekBaseDate:      now.New(baseTime).BeginningOfWeek(),
+		WeeklyCount:       2,
+		WeeklyDistance:    3100,
+		WeeklyMovingTime:  243,
+		WeeklyCalories:    3400,
+	}
+
+	exp := []string{
+		"New Act: 1.10km 2min 1400kcal ",
+		"Weekly: 3.10km 4min 3400kcal (2) ",
+		"Monthly: 2.10km 3min 2400kcal (3) ",
+		"https://www.strava.com/activities/999",
+	}
+
+	assert.Equal(t, strings.Join(exp, "\n"), s.GenerateText(999), "generate text")
 }
