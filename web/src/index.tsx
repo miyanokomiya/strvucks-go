@@ -12,12 +12,11 @@ import Typography from '@material-ui/core/Typography'
 const parsed = queryString.parse(location.search)
 const token = (parsed.token as string) || localStorage.getItem('token') || ''
 axios.defaults.headers.common['Authorization'] = token
-// axios.defaults.headers.common['Authorization'] =
-//   'eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHBpcnkiOjE1Njk3NjQ4MzIsImlkIjoyfQ.y3yh8NskL3ONhqHA09hu9e3-zHSK6xVxJBFXOXmUAEmoX0dPFqKAF6k-hrlxeKlkVx3Dafjb_tlGYOiO8KqFs7o6uMeJ0le50pwtak_sWlovr_hV97D0DQutj54Z488vMYu_ulNILYoy-rzLQFhbeHqJ0LeqKniADxVKYx5vAYQ6bdslgaTyqKcsJlXkPSEp9sjgiNC7TNCGmRn1Ta0RfcABt-lpgzo-Ayr0_dAWgSC0aJq6AR-UuWszrw5SampaJqpOF0e0woSEotrGl-hOLsHNk9uIBBJkTHH_bDb4vgqakAxwj09bmRGCY756BC48AiHrNYpENrFCcgCBc2qpRw'
 
 const App: React.FC = () => {
   const [loading, setLoading] = React.useState(true)
   const [user, setUser] = React.useState(null)
+  const [stravaAuth, setStravaAuth] = React.useState('')
   const [draftKey, setDraftKey] = React.useState('')
   const [draftMessage, setDraftMessage] = React.useState('')
 
@@ -57,6 +56,12 @@ const App: React.FC = () => {
       })
   }, [])
 
+  React.useEffect(() => {
+    axios.get('/api/strava_auth').then(res => {
+      setStravaAuth(res.data.url)
+    })
+  }, [])
+
   const userBlock = React.useMemo(() => {
     if (user)
       return (
@@ -90,10 +95,13 @@ const App: React.FC = () => {
       )
     return (
       <div>
-        <p>Not Auth</p>
+        <Link href={stravaAuth}>
+          <p>Login by Strava</p>
+          <img src="/assets/strava.jpg" style={{ width: '120px', height: 'auto' }} />
+        </Link>
       </div>
     )
-  }, [draftKey, draftMessage, onInputDraftKey, onInputDraftMessage, onSubmit, user])
+  }, [draftKey, draftMessage, onInputDraftKey, onInputDraftMessage, onSubmit, stravaAuth, user])
 
   return (
     <div>

@@ -1,6 +1,8 @@
 package handler
 
 import (
+	"net/url"
+
 	"strvucks-go/internal/app/model"
 
 	"github.com/gin-gonic/gin"
@@ -10,6 +12,16 @@ import (
 // API handles API
 type API struct {
 	WebhookClient WebhookClient
+}
+
+// StravaAuthURL returns a Strava oauth2 URL
+func (w *API) StravaAuthURL(c *gin.Context) {
+	config := Config()
+	authURL, _ := url.QueryUnescape(config.AuthCodeURL("strvucks", AuthCodeOption()...))
+
+	c.JSON(200, map[string]interface{}{
+		"url": authURL,
+	})
 }
 
 // CurrentUserHandler handles current user

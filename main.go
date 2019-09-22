@@ -1,9 +1,7 @@
 package main
 
 import (
-	"fmt"
 	"net/http"
-	"net/url"
 	"os"
 
 	"strvucks-go/internal/app/handler"
@@ -42,6 +40,7 @@ func main() {
 	apiRoute := r.Group("/api")
 	{
 		api := handler.API{}
+		apiRoute.GET("/strava_auth", api.StravaAuthURL)
 		apiRoute.GET("/current_user", api.CurrentUserHandler)
 		apiRoute.POST("/current_user", api.UpdateCurrentUserHandler)
 	}
@@ -49,20 +48,11 @@ func main() {
 	r.StaticFS("/assets", http.Dir("web/assets"))
 	r.StaticFS("/web", http.Dir("web/dist"))
 
-	r.GET("/", func(c *gin.Context) {
-		indexHandler(c.Writer, c.Request)
-	})
+	r.GET("/", indexHandler)
 
 	r.Run(":" + os.Getenv("PORT"))
 }
 
-func indexHandler(w http.ResponseWriter, r *http.Request) {
-	config := handler.Config()
-	authURL, _ := url.QueryUnescape(config.AuthCodeURL("strvucks", handler.AuthCodeOption()...))
-
-	// you should make this a template in your real application
-	fmt.Fprintf(w, `<a href="%s">`, authURL)
-	fmt.Fprint(w, `<p>Login by Strava</p>`)
-	fmt.Fprint(w, `<img src="/assets/strava.jpg" style="width: 120px; height: auto;" />`)
-	fmt.Fprint(w, `</a>`)
+func indexHandler(c *gin.Context) {
+	c.Redirect(303, "/web/index.html")
 }

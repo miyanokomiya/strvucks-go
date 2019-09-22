@@ -15,6 +15,36 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
+func StravaAuthURL(t *testing.T) {
+	api := API{}
+	router := gin.New()
+	router.GET("/hoge", api.StravaAuthURL)
+
+	{
+		req, err := http.NewRequest("GET", "/hoge", nil)
+		if err != nil {
+			t.Error("NewRequest URI error")
+		}
+
+		w := httptest.NewRecorder()
+		router.ServeHTTP(w, req)
+		if w.Code != 200 {
+			t.Fatal("cannot get URL", w.Code, w.Body)
+		} else {
+			decoder := json.NewDecoder(w.Body)
+			data := map[string]interface{}{}
+			if err := decoder.Decode(&data); err != nil {
+				t.Fatal("cannot get URL", err)
+			}
+			url, ok := data["url"].(string)
+			if !ok {
+				t.Fatal("cannot get URL")
+			}
+			assert.NotEqual(t, "", url, "success get URL")
+		}
+	}
+}
+
 func TestCurrentUserHandler(t *testing.T) {
 	godotenv.Load("../../../.env")
 
