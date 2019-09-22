@@ -17,6 +17,9 @@ goose/status:
 goose/up:
 	goose -dir ${GOOSE_DIR} ${GOOSE_DRIVER} ${GOOSE_CONNECTION} up
 
+goose/down:
+	goose -dir ${GOOSE_DIR} ${GOOSE_DRIVER} ${GOOSE_CONNECTION} down
+
 goose/create:
 	goose -dir ${GOOSE_DIR} ${GOOSE_DRIVER} ${GOOSE_CONNECTION} create ${ARG} sql
 
