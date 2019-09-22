@@ -2,6 +2,7 @@ package handler
 
 import (
 	"context"
+	"fmt"
 
 	"strvucks-go/internal/app/model"
 
@@ -68,13 +69,14 @@ func ExchangeToken(c *gin.Context) {
 	}
 	log.Info("Success save token & user")
 
-	if err := BindAuthToken(c, user, permission.Expiry+60*60*24*7); err != nil {
+	jwtToken, err := CreateToken(user, permission.Expiry+60*60*24*7)
+	if err != nil {
 		log.Error("Failure save auth", err)
 		c.String(500, "Failure save auth")
 		return
 	}
 
-	c.Redirect(303, "/?auth=success")
+	c.Redirect(303, fmt.Sprintf("/web/index.html?token=%s", jwtToken))
 }
 
 func saveUserAndPermission(user *model.User, permission *model.Permission) error {

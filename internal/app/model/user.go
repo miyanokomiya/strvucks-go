@@ -8,11 +8,11 @@ import (
 
 // User model
 type User struct {
-	ID           int64
-	AthleteID    int64
-	Username     string
-	IftttKey     string
-	IftttMessage string
+	ID           int64  `json:"id"`
+	AthleteID    int64  `json:"athleteId"`
+	Username     string `json:"username"`
+	IftttKey     string `json:"iftttKey"`
+	IftttMessage string `json:"iftttMessage"`
 }
 
 // FirstOrInit User by AthleteID

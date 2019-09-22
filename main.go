@@ -27,12 +27,6 @@ func main() {
 		})
 	})
 
-	r.GET("/", func(c *gin.Context) {
-		indexHandler(c.Writer, c.Request)
-	})
-
-	r.StaticFS("/assets", http.Dir("web/assets"))
-
 	r.GET("/exchange_token", func(c *gin.Context) {
 		handler.ExchangeToken(c)
 	})
@@ -45,17 +39,24 @@ func main() {
 		webhook.WebhookHandler(c)
 	})
 
+	apiRoute := r.Group("/api")
+	{
+		api := handler.API{}
+		apiRoute.GET("/current_user", api.CurrentUserHandler)
+		apiRoute.POST("/current_user", api.UpdateCurrentUserHandler)
+	}
+
+	r.StaticFS("/assets", http.Dir("web/assets"))
+	r.StaticFS("/web", http.Dir("web/dist"))
+
+	r.GET("/", func(c *gin.Context) {
+		indexHandler(c.Writer, c.Request)
+	})
+
 	r.Run(":" + os.Getenv("PORT"))
 }
 
 func indexHandler(w http.ResponseWriter, r *http.Request) {
-	id, err := handler.GetAuthUserID(r)
-	if err != nil {
-		fmt.Fprint(w, `<p>Not Auth</p>`)
-	} else {
-		fmt.Fprintf(w, `<p>Your ID: %d</p>`, id)
-	}
-
 	config := handler.Config()
 	authURL, _ := url.QueryUnescape(config.AuthCodeURL("strvucks", handler.AuthCodeOption()...))
 

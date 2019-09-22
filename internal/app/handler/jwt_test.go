@@ -2,43 +2,23 @@ package handler
 
 import (
 	"net/http"
-	"net/http/httptest"
 	"testing"
 	"time"
 
 	"strvucks-go/internal/app/model"
 
-	"github.com/gin-gonic/gin"
 	"github.com/joho/godotenv"
 	"github.com/stretchr/testify/assert"
 )
 
-func TestBindAuthToken(t *testing.T) {
+func TestCreateToken(t *testing.T) {
 	godotenv.Load("../../../.env")
 
-	router := gin.New()
-	router.POST("/tokenAuth", func(c *gin.Context) {
-		if err := BindAuthToken(c, &model.User{}, 100); err != nil {
-			c.String(500, "error")
-			return
-		}
-		c.String(200, "success")
-	})
+	user := model.User{ID: 10}
+	token, err := CreateToken(&user, 100)
 
-	req, err := http.NewRequest("POST", "/tokenAuth", nil)
-	if err != nil {
-		t.Fatal("NewRequest URI error")
-	}
-	w := httptest.NewRecorder()
-
-	router.ServeHTTP(w, req)
-	if w.Code == 200 {
-		cookies := w.Result().Cookies()
-		assert.Equal(t, 1, len(cookies), "cookies exists")
-		assert.Equal(t, JwtName, cookies[0].Name, "cookie name is jwt_token")
-	} else {
-		t.Fatal("Invalid Status", w.Code)
-	}
+	assert.Nil(t, err, "seccess create token")
+	assert.NotEqual(t, "", token, "seccess create token")
 }
 
 func TestGetAuthUserID(t *testing.T) {
@@ -47,7 +27,7 @@ func TestGetAuthUserID(t *testing.T) {
 	getReq := func() *http.Request {
 		req, err := http.NewRequest("GET", "/hoge", nil)
 		if err != nil {
-			t.Error("NewRequest URI error")
+			t.Fatal("NewRequest URI error")
 		}
 		return req
 	}
@@ -59,7 +39,7 @@ func TestGetAuthUserID(t *testing.T) {
 		}
 
 		req := getReq()
-		req.AddCookie(&http.Cookie{Name: JwtName, Value: token})
+		req.Header.Set("Authorization", token)
 		if id, err := GetAuthUserID(req); err != nil {
 			t.Fatal("cannot create token", err)
 		} else {
@@ -74,7 +54,7 @@ func TestGetAuthUserID(t *testing.T) {
 		}
 
 		req := getReq()
-		req.AddCookie(&http.Cookie{Name: JwtName, Value: token})
+		req.Header.Add("Authorization", token)
 		_, err = GetAuthUserID(req)
 		assert.NotNil(t, err, "cannot get auth user from expired JWT token")
 	}
