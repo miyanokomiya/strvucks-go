@@ -19,6 +19,9 @@ install:
 before_script:
   - psql -c 'create database db;' -U postgres
   - make goose/up
+  - make rsa
+  - export JWT_RSA_PRI=`base64 jwt.rsa`
+  - export JWT_RSA_PUB=`base64 jwt.rsa.pub`
 
 script:
   - go test -v ./... -covermode=count -coverprofile=coverage.out
