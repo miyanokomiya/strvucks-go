@@ -5,9 +5,8 @@ import (
 
 	"strvucks-go/internal/app/model"
 
-	log "github.com/sirupsen/logrus"
-
 	"github.com/gin-gonic/gin"
+	log "github.com/sirupsen/logrus"
 	"golang.org/x/oauth2"
 )
 
@@ -68,6 +67,12 @@ func ExchangeToken(c *gin.Context) {
 		return
 	}
 	log.Info("Success save token & user")
+
+	if err := BindAuthToken(c, user); err != nil {
+		log.Error("Failure save auth", err)
+		c.String(500, "Failure save auth")
+		return
+	}
 
 	c.Redirect(303, "/?auth=success")
 }

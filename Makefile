@@ -2,6 +2,12 @@ GOOSE_CONNECTION := "user=${POSTGRES_USER} password=${POSTGRES_PASSWORD} dbname=
 GOOSE_DRIVER := "postgres"
 GOOSE_DIR := "db/goose"
 
+rsa:
+	openssl genrsa -out jwt.rsa 2048
+	base64 jwt.rsa
+	openssl rsa -in jwt.rsa -pubout > jwt.rsa.pub
+	base64 jwt.rsa.pub
+
 goose:
 	goose -dir ${GOOSE_DIR} ${GOOSE_DRIVER} ${GOOSE_CONNECTION} ${ARG}
 
@@ -16,4 +22,4 @@ goose/create:
 
 test:
 	POSTGRES_DB=${POSTGRES_DB}_test make goose/up
-	POSTGRES_DB=${POSTGRES_DB}_test go test -v ./...
+	POSTGRES_DB=${POSTGRES_DB}_test go test ./...

@@ -49,6 +49,13 @@ func main() {
 }
 
 func indexHandler(w http.ResponseWriter, r *http.Request) {
+	id, err := handler.GetAuthUserID(r)
+	if err != nil {
+		fmt.Fprint(w, `<p>Not Auth</p>`)
+	} else {
+		fmt.Fprintf(w, `<p>Your ID: %d</p>`, id)
+	}
+
 	config := handler.Config()
 	authURL, _ := url.QueryUnescape(config.AuthCodeURL("strvucks", handler.AuthCodeOption()...))
 
