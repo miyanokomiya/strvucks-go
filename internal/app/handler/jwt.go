@@ -17,14 +17,29 @@ import (
 // JwtName is cookie name of JWT token
 var JwtName = "jwt_token"
 
+var rsaPri []byte
+var rsaPub []byte
+
 func getRsaPrivate() ([]byte, error) {
+	if len(rsaPri) != 0 {
+		return rsaPri, nil
+	}
+
 	pri64 := os.Getenv("JWT_RSA_PRI")
-	return base64.StdEncoding.DecodeString(pri64)
+	buff, err := base64.StdEncoding.DecodeString(pri64)
+	rsaPri = buff
+	return buff, err
 }
 
 func getRsaPublic() ([]byte, error) {
-	pri64 := os.Getenv("JWT_RSA_PUB")
-	return base64.StdEncoding.DecodeString(pri64)
+	if len(rsaPub) != 0 {
+		return rsaPub, nil
+	}
+
+	pub64 := os.Getenv("JWT_RSA_PUB")
+	buff, err := base64.StdEncoding.DecodeString(pub64)
+	rsaPub = buff
+	return buff, err
 }
 
 // BindAuthToken initializes JWT token
