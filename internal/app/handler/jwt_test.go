@@ -14,10 +14,7 @@ import (
 )
 
 func TestBindAuthToken(t *testing.T) {
-	err := godotenv.Load("../../../.env")
-	if err != nil {
-		t.Fatal("Not found .env file", err)
-	}
+	godotenv.Load("../../../.env")
 
 	router := gin.New()
 	router.POST("/tokenAuth", func(c *gin.Context) {
@@ -45,10 +42,7 @@ func TestBindAuthToken(t *testing.T) {
 }
 
 func TestGetAuthUserID(t *testing.T) {
-	err := godotenv.Load("../../../.env")
-	if err != nil {
-		t.Fatal("Not found .env file", err)
-	}
+	godotenv.Load("../../../.env")
 
 	getReq := func() *http.Request {
 		req, err := http.NewRequest("GET", "/hoge", nil)
