@@ -69,7 +69,7 @@ func ExchangeToken(c *gin.Context) {
 	}
 	log.Info("Success save token & user")
 
-	c.Redirect(200, "/?auth=success")
+	c.Redirect(303, "/?auth=success")
 }
 
 func saveUserAndPermission(user *model.User, permission *model.Permission) error {
