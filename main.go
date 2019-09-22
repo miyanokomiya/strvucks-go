@@ -31,7 +31,7 @@ func main() {
 		indexHandler(c.Writer, c.Request)
 	})
 
-	r.StaticFS("/assets", http.Dir("assets"))
+	r.StaticFS("/assets", http.Dir("web/assets"))
 
 	r.GET("/exchange_token", func(c *gin.Context) {
 		handler.ExchangeToken(c)

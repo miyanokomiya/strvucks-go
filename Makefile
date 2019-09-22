@@ -4,8 +4,8 @@ GOOSE_DIR := "db/goose"
 
 rsa:
 	openssl genrsa -out jwt.rsa 2048
-	base64 jwt.rsa
 	openssl rsa -in jwt.rsa -pubout > jwt.rsa.pub
+	base64 jwt.rsa
 	base64 jwt.rsa.pub
 
 goose:

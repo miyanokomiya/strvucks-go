@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"net/http"
 	"os"
+	"time"
 
 	"strvucks-go/internal/app/model"
 
@@ -27,18 +28,18 @@ func getRsaPublic() ([]byte, error) {
 }
 
 // BindAuthToken initializes JWT token
-func BindAuthToken(c *gin.Context, user *model.User) error {
-	tokenString, err := CreateToken(user)
+func BindAuthToken(c *gin.Context, user *model.User, expiry int64) error {
+	tokenString, err := CreateToken(user, expiry)
 	if err != nil {
 		return fmt.Errorf("Failure create jwt token\n%s", err)
 	}
 
-	c.SetCookie(JwtName, tokenString, 3600, "", "", false, false)
+	c.SetCookie(JwtName, tokenString, int(expiry-time.Now().Unix()), "", "", false, false)
 	return nil
 }
 
 // CreateToken returns JWT token
-func CreateToken(user *model.User) (string, error) {
+func CreateToken(user *model.User, expiry int64) (string, error) {
 	signBytes, err := getRsaPrivate()
 	if err != nil {
 		return "", fmt.Errorf("Failure get rsa\n%s", err)
@@ -52,6 +53,7 @@ func CreateToken(user *model.User) (string, error) {
 	token := jwt.New(jwt.SigningMethodRS256)
 	claims := token.Claims.(jwt.MapClaims)
 	claims["id"] = user.ID
+	claims["expiry"] = expiry
 
 	tokenString, err := token.SignedString(signKey)
 	if err != nil {
@@ -86,9 +88,17 @@ func GetAuthUserID(r *http.Request) (int64, error) {
 	}
 
 	claims := token.Claims.(jwt.MapClaims)
+	expiry, ok := claims["expiry"].(float64)
+	if !ok {
+		return 0, fmt.Errorf("Not found expiry in token")
+	}
+	if int64(expiry) <= time.Now().Unix() {
+		return 0, fmt.Errorf("Token is expired at %d", int64(expiry))
+	}
+
 	idFloat, ok := claims["id"].(float64)
 	if !ok {
-		return 0, fmt.Errorf("Not found ID from token")
+		return 0, fmt.Errorf("Not found ID in token")
 	}
 
 	return int64(idFloat), nil
