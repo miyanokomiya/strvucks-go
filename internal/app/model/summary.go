@@ -8,9 +8,8 @@ import (
 	"strvucks-go/pkg/swagger"
 
 	"github.com/jinzhu/gorm"
-	"github.com/jinzhu/now"
-
 	_ "github.com/jinzhu/gorm/dialects/postgres"
+	"github.com/jinzhu/now"
 )
 
 // Summary model
@@ -97,6 +96,17 @@ func (s Summary) Migrate(activity *swagger.DetailedActivity) Summary {
 	s.LatestCalories = calories
 
 	return s
+}
+
+// MigrateBySummary migrate Summary from SummaryActivity
+func (s Summary) MigrateBySummary(activity *swagger.SummaryActivity) Summary {
+	return s.Migrate(&swagger.DetailedActivity{
+		StartDate:          activity.StartDate,
+		Distance:           activity.Distance,
+		MovingTime:         activity.MovingTime,
+		TotalElevationGain: activity.TotalElevationGain,
+		Calories:           0,
+	})
 }
 
 // GenerateText generates text from Summary

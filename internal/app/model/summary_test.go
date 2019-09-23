@@ -181,6 +181,70 @@ func TestMigrate(t *testing.T) {
 	}
 }
 
+func TestMigrateBySummary(t *testing.T) {
+	format := "2006-01-02 15:04:05"
+	baseTime, _ := time.Parse(format, "2019-09-10 23:36:00")
+
+	summary := Summary{
+		LatestDistance:            1,
+		LatestMovingTime:          2,
+		LatestTotalElevationGain:  3,
+		LatestCalories:            4,
+		MonthBaseDate:             now.New(baseTime).BeginningOfMonth(),
+		MonthlyCount:              5,
+		MonthlyDistance:           6,
+		MonthlyMovingTime:         7,
+		MonthlyTotalElevationGain: 8,
+		MonthlyCalories:           9,
+		WeekBaseDate:              now.New(baseTime).BeginningOfWeek(),
+		WeeklyCount:               10,
+		WeeklyDistance:            11,
+		WeeklyMovingTime:          12,
+		WeeklyTotalElevationGain:  13,
+		WeeklyCalories:            14,
+	}
+
+	type Data struct {
+		act swagger.SummaryActivity
+		exp Summary
+		mes string
+	}
+
+	data := []Data{
+		Data{
+			act: swagger.SummaryActivity{
+				StartDate:          baseTime.AddDate(0, 0, 1),
+				Distance:           100,
+				MovingTime:         200,
+				TotalElevationGain: 300,
+			},
+			exp: Summary{
+				LatestDistance:            100,
+				LatestMovingTime:          200,
+				LatestTotalElevationGain:  300,
+				LatestCalories:            0,
+				MonthBaseDate:             now.New(baseTime).BeginningOfMonth(),
+				MonthlyCount:              6,
+				MonthlyDistance:           106,
+				MonthlyMovingTime:         207,
+				MonthlyTotalElevationGain: 308,
+				MonthlyCalories:           9,
+				WeekBaseDate:              now.New(baseTime).BeginningOfWeek(),
+				WeeklyCount:               11,
+				WeeklyDistance:            111,
+				WeeklyMovingTime:          212,
+				WeeklyTotalElevationGain:  313,
+				WeeklyCalories:            14,
+			},
+			mes: "same month, week => summate month, week",
+		},
+	}
+
+	for _, d := range data {
+		assert.Equal(t, d.exp, summary.MigrateBySummary(&d.act), d.mes)
+	}
+}
+
 func TestGenerateText(t *testing.T) {
 	format := "2006-01-02 15:04:05"
 	baseTime, _ := time.Parse(format, "2019-09-10 23:36:00")
