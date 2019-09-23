@@ -1,2 +1,2 @@
-release: make goose/up
+release: make release
 web: strvucks-go
