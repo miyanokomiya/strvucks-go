@@ -48,7 +48,6 @@ func main() {
 
 	r.StaticFS("/assets", http.Dir("web/assets"))
 	r.StaticFS("/web", http.Dir("web/dist"))
-	r.StaticFile("/favicon.ico", "web/assets/favicon.ico")
 
 	r.GET("/", indexHandler)
 

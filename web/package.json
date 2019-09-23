@@ -2,8 +2,8 @@
   "name": "web",
   "version": "1.0.0",
   "scripts": {
-    "build": "parcel build src/index.html --public-url /web",
-    "start": "parcel watch src/index.html --public-url /web",
+    "build": "parcel build ./index.html --public-url /web",
+    "start": "parcel watch ./index.html --public-url /web",
     "lint": "eslint --ext .js,.jsx,.ts,.tsx ./"
   },
   "devDependencies": {
