@@ -131,7 +131,7 @@ func (w *Webhook) WebhookHandler(c *gin.Context) {
 func (w *Webhook) updateSummary(activityID int64, athleteID int64) *model.Summary {
 	permission := model.Permission{}
 	if err := model.DB().First(&permission, model.Permission{AthleteID: athleteID}).Error; err != nil {
-		log.Error("Failure get permission of Strava:", err)
+		log.Error("Failure get permission of Strava:", athleteID, err)
 		return nil
 	}
 

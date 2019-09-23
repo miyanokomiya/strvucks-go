@@ -11,31 +11,34 @@ import (
 
 	jwt "github.com/dgrijalva/jwt-go"
 	request "github.com/dgrijalva/jwt-go/request"
-	"github.com/gin-gonic/gin"
 )
 
 // JwtName is cookie name of JWT token
 var JwtName = "jwt_token"
 
+var rsaPri []byte
+var rsaPub []byte
+
 func getRsaPrivate() ([]byte, error) {
+	if len(rsaPri) != 0 {
+		return rsaPri, nil
+	}
+
 	pri64 := os.Getenv("JWT_RSA_PRI")
-	return base64.StdEncoding.DecodeString(pri64)
+	buff, err := base64.StdEncoding.DecodeString(pri64)
+	rsaPri = buff
+	return buff, err
 }
 
 func getRsaPublic() ([]byte, error) {
-	pri64 := os.Getenv("JWT_RSA_PUB")
-	return base64.StdEncoding.DecodeString(pri64)
-}
-
-// BindAuthToken initializes JWT token
-func BindAuthToken(c *gin.Context, user *model.User, expiry int64) error {
-	tokenString, err := CreateToken(user, expiry)
-	if err != nil {
-		return fmt.Errorf("Failure create jwt token\n%s", err)
+	if len(rsaPub) != 0 {
+		return rsaPub, nil
 	}
 
-	c.SetCookie(JwtName, tokenString, int(expiry-time.Now().Unix()), "", "", false, false)
-	return nil
+	pub64 := os.Getenv("JWT_RSA_PUB")
+	buff, err := base64.StdEncoding.DecodeString(pub64)
+	rsaPub = buff
+	return buff, err
 }
 
 // CreateToken returns JWT token
@@ -75,7 +78,7 @@ func GetAuthUserID(r *http.Request) (int64, error) {
 		return 0, fmt.Errorf("Failure parse rsa pub\n%s", err)
 	}
 
-	token, err := request.ParseFromRequest(r, &CookieExtractor{}, func(token *jwt.Token) (interface{}, error) {
+	token, err := request.ParseFromRequest(r, request.AuthorizationHeaderExtractor, func(token *jwt.Token) (interface{}, error) {
 		_, err := token.Method.(*jwt.SigningMethodRSA)
 		if !err {
 			return nil, fmt.Errorf("Unexpected signing method: %v", token.Header["alg"])
@@ -84,7 +87,7 @@ func GetAuthUserID(r *http.Request) (int64, error) {
 	})
 
 	if err != nil || !token.Valid {
-		return 0, fmt.Errorf("Unauthorized")
+		return 0, fmt.Errorf("Unauthorized\n%s", err)
 	}
 
 	claims := token.Claims.(jwt.MapClaims)
@@ -102,16 +105,4 @@ func GetAuthUserID(r *http.Request) (int64, error) {
 	}
 
 	return int64(idFloat), nil
-}
-
-// CookieExtractor extracts token from cookie
-type CookieExtractor []string
-
-// ExtractToken extracts token from cookie
-func (e CookieExtractor) ExtractToken(req *http.Request) (string, error) {
-	token, err := req.Cookie(JwtName)
-	if err != nil {
-		return "", request.ErrNoTokenInRequest
-	}
-	return token.Value, nil
 }

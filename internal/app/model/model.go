@@ -2,6 +2,7 @@ package model
 
 import (
 	"os"
+	"time"
 
 	"github.com/jinzhu/gorm"
 
@@ -47,6 +48,8 @@ type Permission struct {
 	TokenType    string
 	RefreshToken string
 	Expiry       int64
+	CreatedAt    time.Time
+	UpdatedAt    time.Time
 }
 
 // WebhookEvent model

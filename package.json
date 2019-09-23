@@ -1,0 +1,8 @@
+{
+  "engines": {
+    "node": "10.x"
+  },
+  "scripts": {
+    "heroku-postbuild": "cd ./web && yarn install && yarn build"
+  }
+}

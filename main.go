@@ -1,9 +1,7 @@
 package main
 
 import (
-	"fmt"
 	"net/http"
-	"net/url"
 	"os"
 
 	"strvucks-go/internal/app/handler"
@@ -27,12 +25,6 @@ func main() {
 		})
 	})
 
-	r.GET("/", func(c *gin.Context) {
-		indexHandler(c.Writer, c.Request)
-	})
-
-	r.StaticFS("/assets", http.Dir("web/assets"))
-
 	r.GET("/exchange_token", func(c *gin.Context) {
 		handler.ExchangeToken(c)
 	})
@@ -45,23 +37,24 @@ func main() {
 		webhook.WebhookHandler(c)
 	})
 
+	apiRoute := r.Group("/api")
+	{
+		api := handler.NewAPI()
+		apiRoute.GET("/strava_auth", api.StravaAuthURL)
+		apiRoute.GET("/current_user", api.CurrentUserHandler)
+		apiRoute.POST("/current_user", api.UpdateCurrentUserHandler)
+		apiRoute.GET("/current_user/summary", api.MySummaryHandler)
+	}
+
+	r.StaticFS("/assets", http.Dir("web/assets"))
+	r.StaticFS("/web", http.Dir("web/dist"))
+	r.StaticFile("/favicon.ico", "web/assets/favicon.ico")
+
+	r.GET("/", indexHandler)
+
 	r.Run(":" + os.Getenv("PORT"))
 }
 
-func indexHandler(w http.ResponseWriter, r *http.Request) {
-	id, err := handler.GetAuthUserID(r)
-	if err != nil {
-		fmt.Fprint(w, `<p>Not Auth</p>`)
-	} else {
-		fmt.Fprintf(w, `<p>Your ID: %d</p>`, id)
-	}
-
-	config := handler.Config()
-	authURL, _ := url.QueryUnescape(config.AuthCodeURL("strvucks", handler.AuthCodeOption()...))
-
-	// you should make this a template in your real application
-	fmt.Fprintf(w, `<a href="%s">`, authURL)
-	fmt.Fprint(w, `<p>Login by Strava</p>`)
-	fmt.Fprint(w, `<img src="/assets/strava.jpg" style="width: 120px; height: auto;" />`)
-	fmt.Fprint(w, `</a>`)
+func indexHandler(c *gin.Context) {
+	c.Redirect(303, "/web/index.html")
 }

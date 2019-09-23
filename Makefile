@@ -17,9 +17,15 @@ goose/status:
 goose/up:
 	goose -dir ${GOOSE_DIR} ${GOOSE_DRIVER} ${GOOSE_CONNECTION} up
 
+goose/down:
+	goose -dir ${GOOSE_DIR} ${GOOSE_DRIVER} ${GOOSE_CONNECTION} down
+
 goose/create:
 	goose -dir ${GOOSE_DIR} ${GOOSE_DRIVER} ${GOOSE_CONNECTION} create ${ARG} sql
 
 test:
 	POSTGRES_DB=${POSTGRES_DB}_test make goose/up
-	POSTGRES_DB=${POSTGRES_DB}_test go test ./...
+	POSTGRES_DB=${POSTGRES_DB}_test go test ./ ./internal/...
+
+release:
+	make goose/up

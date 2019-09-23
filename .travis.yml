@@ -24,5 +24,5 @@ before_script:
   - export JWT_RSA_PUB=`base64 jwt.rsa.pub`
 
 script:
-  - go test -v ./... -covermode=count -coverprofile=coverage.out
+  - go test -v ./ ./internal/... -covermode=count -coverprofile=coverage.out
   - $HOME/gopath/bin/goveralls -coverprofile=coverage.out -service=travis-ci

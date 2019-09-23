@@ -1,0 +1,13 @@
+{
+  "compilerOptions": {
+    "target": "es2015",
+    "module": "commonjs",
+    "strict": true,
+    "jsx": "react",
+    "esModuleInterop": true,
+    "declaration": true,
+    "rootDir": "./src",
+    "experimentalDecorators": true,
+    "lib": ["dom", "es2015"]
+  }
+}

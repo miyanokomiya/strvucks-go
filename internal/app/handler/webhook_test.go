@@ -29,10 +29,15 @@ func TestUpdateSummary(t *testing.T) {
 
 	user := model.User{AthleteID: 1}
 	permission := model.Permission{AthleteID: user.AthleteID}
-	if err := db.Save(&user).Save(&permission).Error; err != nil {
+
+	if err := db.Save(&user).Error; err != nil {
 		t.Fatal("cannot prepare", err)
 	}
-	defer db.Delete(&user).Delete(&permission)
+	defer db.Delete(&user)
+	if err := db.Save(&permission).Error; err != nil {
+		t.Fatal("cannot prepare", err)
+	}
+	defer db.Delete(&permission)
 
 	webhookAct := Webhook{&WebhookClientMock{&swagger.DetailedActivity{}, nil}}
 	summaryAct := webhookAct.updateSummary(100, 1)
