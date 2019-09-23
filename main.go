@@ -39,10 +39,11 @@ func main() {
 
 	apiRoute := r.Group("/api")
 	{
-		api := handler.API{}
+		api := handler.NewAPI()
 		apiRoute.GET("/strava_auth", api.StravaAuthURL)
 		apiRoute.GET("/current_user", api.CurrentUserHandler)
 		apiRoute.POST("/current_user", api.UpdateCurrentUserHandler)
+		apiRoute.GET("/current_user/summary", api.MySummaryHandler)
 	}
 
 	r.StaticFS("/assets", http.Dir("web/assets"))

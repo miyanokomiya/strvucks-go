@@ -8,6 +8,13 @@ import Grid from '@material-ui/core/Grid'
 import Button from '@material-ui/core/Button'
 import TextField from '@material-ui/core/TextField'
 import Typography from '@material-ui/core/Typography'
+import Snackbar from '@material-ui/core/Snackbar'
+import IconButton from '@material-ui/core/IconButton'
+import CloseIcon from '@material-ui/icons/Close'
+import Card from '@material-ui/core/Card'
+import CardContent from '@material-ui/core/CardContent'
+import { User, Summary } from './types'
+import { SummaryCard } from './components/Summary'
 
 const parsed = queryString.parse(location.search)
 const token = (parsed.token as string) || localStorage.getItem('token') || ''
@@ -15,11 +22,16 @@ axios.defaults.headers.common['Authorization'] = token
 
 const App: React.FC = () => {
   const [loading, setLoading] = React.useState(true)
-  const [user, setUser] = React.useState(null)
+  const [user, setUser] = React.useState(null as User | null)
+  const [summary, setSummary] = React.useState(null as Summary | null)
   const [stravaAuth, setStravaAuth] = React.useState('')
   const [draftKey, setDraftKey] = React.useState('')
   const [draftMessage, setDraftMessage] = React.useState('')
+  const [snack, setSnack] = React.useState(false)
 
+  const onCloseSnack = React.useCallback(() => {
+    setSnack(false)
+  }, [])
   const onInputDraftKey = React.useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
     setDraftKey(e.currentTarget.value)
   }, [])
@@ -36,6 +48,7 @@ const App: React.FC = () => {
         })
         .then(res => {
           setUser(res.data)
+          setSnack(true)
         })
     },
     [draftKey, draftMessage],
@@ -54,6 +67,12 @@ const App: React.FC = () => {
       .catch(() => {
         setLoading(false)
       })
+  }, [])
+
+  React.useEffect(() => {
+    axios.get('/api/current_user/summary').then(res => {
+      setSummary(res.data)
+    })
   }, [])
 
   React.useEffect(() => {
@@ -80,10 +99,22 @@ const App: React.FC = () => {
               <p>{user.username}</p>
             </Grid>
             <Grid item xs={12}>
-              <Typography>IFTTT Key</Typography>
-              <TextField variant="outlined" value={draftKey} onChange={onInputDraftKey} />
-              <Typography>IFTTT Message</Typography>
-              <TextField variant="outlined" value={draftMessage} onChange={onInputDraftMessage} />
+              <TextField
+                label="IFTTT Key"
+                variant="outlined"
+                margin="normal"
+                value={draftKey}
+                onChange={onInputDraftKey}
+              />
+            </Grid>
+            <Grid item xs={12}>
+              <TextField
+                label="IFTTT Message"
+                variant="outlined"
+                margin="normal"
+                value={draftMessage}
+                onChange={onInputDraftMessage}
+              />
             </Grid>
             <Grid item>
               <Button type="submit" variant="contained" color="primary">
@@ -91,6 +122,24 @@ const App: React.FC = () => {
               </Button>
             </Grid>
           </Grid>
+          <Snackbar
+            anchorOrigin={{
+              vertical: 'bottom',
+              horizontal: 'left',
+            }}
+            open={snack}
+            autoHideDuration={6000}
+            onClose={onCloseSnack}
+            ContentProps={{
+              'aria-describedby': 'message-id',
+            }}
+            message={<span>Saved</span>}
+            action={[
+              <IconButton key="close" aria-label="close" color="inherit" onClick={onCloseSnack}>
+                <CloseIcon />
+              </IconButton>,
+            ]}
+          />
         </form>
       )
     return (
@@ -101,13 +150,45 @@ const App: React.FC = () => {
         </Link>
       </div>
     )
-  }, [draftKey, draftMessage, onInputDraftKey, onInputDraftMessage, onSubmit, stravaAuth, user])
+  }, [
+    draftKey,
+    draftMessage,
+    onCloseSnack,
+    onInputDraftKey,
+    onInputDraftMessage,
+    onSubmit,
+    snack,
+    stravaAuth,
+    user,
+  ])
 
-  return (
-    <div>
-      <div>{loading ? 'loading...' : userBlock}</div>
-    </div>
-  )
+  const summaryBlock = React.useMemo(() => {
+    if (summary) return <SummaryCard summary={summary} />
+
+    return (
+      <Card>
+        <CardContent>
+          <Typography variant="h5" component="h2">
+            No Summary
+          </Typography>
+        </CardContent>
+      </Card>
+    )
+  }, [summary])
+
+  const mainBlock = React.useMemo(() => {
+    if (!loading)
+      return (
+        <div>
+          <div>{userBlock}</div>
+          <div>{summaryBlock}</div>
+        </div>
+      )
+
+    return <div>loading...</div>
+  }, [loading, summaryBlock, userBlock])
+
+  return <div>{mainBlock}</div>
 }
 
 render(<App />, document.getElementById('root') as any)

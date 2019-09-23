@@ -32386,70 +32386,6 @@ function _default() {
 
   return str;
 }
-},{}],"../node_modules/warning/warning.js":[function(require,module,exports) {
-/**
- * Copyright (c) 2014-present, Facebook, Inc.
- *
- * This source code is licensed under the MIT license found in the
- * LICENSE file in the root directory of this source tree.
- */
-'use strict';
-/**
- * Similar to invariant but only logs a warning if the condition is not met.
- * This can be used to log issues in development environments in critical
- * paths. Removing the logging code for production environments will keep the
- * same logic and follow the same code paths.
- */
-
-var __DEV__ = "development" !== 'production';
-
-var warning = function () {};
-
-if (__DEV__) {
-  var printWarning = function printWarning(format, args) {
-    var len = arguments.length;
-    args = new Array(len > 1 ? len - 1 : 0);
-
-    for (var key = 1; key < len; key++) {
-      args[key - 1] = arguments[key];
-    }
-
-    var argIndex = 0;
-    var message = 'Warning: ' + format.replace(/%s/g, function () {
-      return args[argIndex++];
-    });
-
-    if (typeof console !== 'undefined') {
-      console.error(message);
-    }
-
-    try {
-      // --- Welcome to debugging React ---
-      // This error was thrown as a convenience so that you can use this stack
-      // to find the callsite that caused this warning to fire.
-      throw new Error(message);
-    } catch (x) {}
-  };
-
-  warning = function (condition, format, args) {
-    var len = arguments.length;
-    args = new Array(len > 2 ? len - 2 : 0);
-
-    for (var key = 2; key < len; key++) {
-      args[key - 2] = arguments[key];
-    }
-
-    if (format === undefined) {
-      throw new Error('`warning(condition, format, ...args)` requires a warning ' + 'message argument');
-    }
-
-    if (!condition) {
-      printWarning.apply(null, [format].concat(args));
-    }
-  };
-}
-
-module.exports = warning;
 },{}],"../node_modules/@material-ui/core/esm/utils/helpers.js":[function(require,module,exports) {
 "use strict";
 
@@ -32459,17 +32395,15 @@ Object.defineProperty(exports, "__esModule", {
 exports.capitalize = capitalize;
 exports.createChainedFunction = createChainedFunction;
 
-var _warning = _interopRequireDefault(require("warning"));
-
-function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
-
 // It should to be noted that this function isn't equivalent to `text-transform: capitalize`.
 //
 // A strict capitalization should uppercase the first letter of each word a the sentence.
 // We only handle the first word.
 function capitalize(string) {
-  if ("development" !== 'production' && typeof string !== 'string') {
-    throw new Error('Material-UI: capitalize(string) expects a string argument.');
+  if ("development" !== 'production') {
+    if (typeof string !== 'string') {
+      throw new Error('Material-UI: capitalize(string) expects a string argument.');
+    }
   }
 
   return string.charAt(0).toUpperCase() + string.slice(1);
@@ -32495,7 +32429,12 @@ function createChainedFunction() {
       return acc;
     }
 
-    "development" !== "production" ? (0, _warning.default)(typeof func === 'function', 'Material-UI: invalid Argument Type, must only provide functions, undefined, or null.') : void 0;
+    if ("development" !== 'production') {
+      if (typeof func !== 'function') {
+        console.error('Material-UI: invalid Argument Type, must only provide functions, undefined, or null.');
+      }
+    }
+
     return function chainedFunction() {
       for (var _len2 = arguments.length, args = new Array(_len2), _key2 = 0; _key2 < _len2; _key2++) {
         args[_key2] = arguments[_key2];
@@ -32506,7 +32445,7 @@ function createChainedFunction() {
     };
   }, function () {});
 }
-},{"warning":"../node_modules/warning/warning.js"}],"../node_modules/@material-ui/utils/esm/chainPropTypes.js":[function(require,module,exports) {
+},{}],"../node_modules/@material-ui/utils/esm/chainPropTypes.js":[function(require,module,exports) {
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -32925,8 +32864,6 @@ Object.defineProperty(exports, "__esModule", {
 });
 exports.default = createGenerateClassName;
 
-var _warning = _interopRequireDefault(require("warning"));
-
 var _nested = _interopRequireDefault(require("../ThemeProvider/nested"));
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
@@ -32959,7 +32896,13 @@ function createGenerateClassName() {
   var ruleCounter = 0;
   return function (rule, styleSheet) {
     ruleCounter += 1;
-    "development" !== "production" ? (0, _warning.default)(ruleCounter < 1e10, ['Material-UI: you might have a memory leak.', 'The ruleCounter is not supposed to grow that much.'].join('')) : void 0;
+
+    if ("development" !== 'production') {
+      if (ruleCounter >= 1e10) {
+        console.warn(['Material-UI: you might have a memory leak.', 'The ruleCounter is not supposed to grow that much.'].join(''));
+      }
+    }
+
     var name = styleSheet.options.name; // Is a global static MUI style?
 
     if (name && name.indexOf('Mui') === 0 && !styleSheet.options.link && !disableGlobal) {
@@ -32990,7 +32933,7 @@ function createGenerateClassName() {
     return "".concat(seedPrefix).concat(suffix);
   };
 }
-},{"warning":"../node_modules/warning/warning.js","../ThemeProvider/nested":"../node_modules/@material-ui/styles/esm/ThemeProvider/nested.js"}],"../node_modules/@material-ui/styles/esm/createGenerateClassName/index.js":[function(require,module,exports) {
+},{"../ThemeProvider/nested":"../node_modules/@material-ui/styles/esm/ThemeProvider/nested.js"}],"../node_modules/@material-ui/styles/esm/createGenerateClassName/index.js":[function(require,module,exports) {
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -34988,7 +34931,7 @@ function () {
     // TODO figure out if its a bug and if it is known.
     // Workaround is to redeploy the sheet.
 
-    if (this.hasInsertedRules) {
+    if (this.hasInsertedRules && !(this.sheet && !this.sheet.deployed)) {
       this.hasInsertedRules = false;
       this.deploy();
     }
@@ -35128,7 +35071,7 @@ var Jss =
 function () {
   function Jss(options) {
     this.id = instanceCounter++;
-    this.version = "10.0.0-alpha.24";
+    this.version = "10.0.0-alpha.25";
     this.plugins = new PluginsRegistry();
     this.options = {
       id: {
@@ -35698,7 +35641,7 @@ function jssNested() {
         return rule.selector;
       }
 
-      "development" !== "production" ? (0, _tinyWarning.default)(false, "[JSS] Could not find the referenced rule " + key + " in " + (container.options.meta || container.toString()) + ".") : void 0;
+      "development" !== "production" ? (0, _tinyWarning.default)(false, "[JSS] Could not find the referenced rule \"" + key + "\" in \"" + (container.options.meta || container.toString()) + "\".") : void 0;
       return key;
     };
   }
@@ -36864,8 +36807,6 @@ exports.default = void 0;
 
 var _extends2 = _interopRequireDefault(require("@babel/runtime/helpers/esm/extends"));
 
-var _warning = _interopRequireDefault(require("warning"));
-
 var _utils = require("@material-ui/utils");
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
@@ -36882,14 +36823,23 @@ function mergeClasses() {
 
   var nextClasses = (0, _extends2.default)({}, baseClasses);
 
-  if ("development" !== 'production' && typeof newClasses === 'string') {
-    "development" !== "production" ? (0, _warning.default)(false, ["Material-UI: the value `".concat(newClasses, "` ") + "provided to the classes prop of ".concat((0, _utils.getDisplayName)(Component), " is incorrect."), 'You might want to use the className prop instead.'].join('\n')) : void 0;
-    return baseClasses;
+  if ("development" !== 'production') {
+    if (typeof newClasses === 'string') {
+      console.error(["Material-UI: the value `".concat(newClasses, "` ") + "provided to the classes prop of ".concat((0, _utils.getDisplayName)(Component), " is incorrect."), 'You might want to use the className prop instead.'].join('\n'));
+      return baseClasses;
+    }
   }
 
   Object.keys(newClasses).forEach(function (key) {
-    "development" !== "production" ? (0, _warning.default)(baseClasses[key] || !newClasses[key], ["Material-UI: the key `".concat(key, "` ") + "provided to the classes prop is not implemented in ".concat((0, _utils.getDisplayName)(Component), "."), "You can only override one of the following: ".concat(Object.keys(baseClasses).join(','), ".")].join('\n')) : void 0;
-    "development" !== "production" ? (0, _warning.default)(!newClasses[key] || typeof newClasses[key] === 'string', ["Material-UI: the key `".concat(key, "` ") + "provided to the classes prop is not valid for ".concat((0, _utils.getDisplayName)(Component), "."), "You need to provide a non empty string instead of: ".concat(newClasses[key], ".")].join('\n')) : void 0;
+    if ("development" !== 'production') {
+      if (!baseClasses[key] && newClasses[key]) {
+        console.error(["Material-UI: the key `".concat(key, "` ") + "provided to the classes prop is not implemented in ".concat((0, _utils.getDisplayName)(Component), "."), "You can only override one of the following: ".concat(Object.keys(baseClasses).join(','), ".")].join('\n'));
+      }
+
+      if (newClasses[key] && typeof newClasses[key] !== 'string') {
+        console.error(["Material-UI: the key `".concat(key, "` ") + "provided to the classes prop is not valid for ".concat((0, _utils.getDisplayName)(Component), "."), "You need to provide a non empty string instead of: ".concat(newClasses[key], ".")].join('\n'));
+      }
+    }
 
     if (newClasses[key]) {
       nextClasses[key] = "".concat(baseClasses[key], " ").concat(newClasses[key]);
@@ -36900,7 +36850,7 @@ function mergeClasses() {
 
 var _default = mergeClasses;
 exports.default = _default;
-},{"@babel/runtime/helpers/esm/extends":"../node_modules/@babel/runtime/helpers/esm/extends.js","warning":"../node_modules/warning/warning.js","@material-ui/utils":"../node_modules/@material-ui/utils/esm/index.js"}],"../node_modules/@material-ui/styles/esm/mergeClasses/index.js":[function(require,module,exports) {
+},{"@babel/runtime/helpers/esm/extends":"../node_modules/@babel/runtime/helpers/esm/extends.js","@material-ui/utils":"../node_modules/@material-ui/utils/esm/index.js"}],"../node_modules/@material-ui/styles/esm/mergeClasses/index.js":[function(require,module,exports) {
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -37011,8 +36961,6 @@ var _react = _interopRequireDefault(require("react"));
 
 var _propTypes = _interopRequireDefault(require("prop-types"));
 
-var _warning = _interopRequireDefault(require("warning"));
-
 var _utils = require("@material-ui/utils");
 
 var _createGenerateClassName = _interopRequireDefault(require("../createGenerateClassName"));
@@ -37060,9 +37008,24 @@ function StylesProvider(props) {
   var context = (0, _extends2.default)({}, outerOptions, {
     disableGeneration: disableGeneration
   }, localOptions);
-  "development" !== "production" ? (0, _warning.default)(typeof window !== 'undefined' || context.sheetsManager, 'Material-UI: you need to use the ServerStyleSheets API when rendering on the server.') : void 0;
-  "development" !== "production" ? (0, _warning.default)(!context.jss.options.insertionPoint || !injectFirst, 'Material-UI: you cannot use a custom insertionPoint and <StylesContext injectFirst> at the same time.') : void 0;
-  "development" !== "production" ? (0, _warning.default)(!injectFirst || !localOptions.jss, 'Material-UI: you cannot use the jss and injectFirst props at the same time.') : void 0;
+
+  if ("development" !== 'production') {
+    if (typeof window === 'undefined' && !context.sheetsManager) {
+      console.error('Material-UI: you need to use the ServerStyleSheets API when rendering on the server.');
+    }
+  }
+
+  if ("development" !== 'production') {
+    if (context.jss.options.insertionPoint && injectFirst) {
+      console.error('Material-UI: you cannot use a custom insertionPoint and <StylesContext injectFirst> at the same time.');
+    }
+  }
+
+  if ("development" !== 'production') {
+    if (injectFirst && localOptions.jss) {
+      console.error('Material-UI: you cannot use the jss and injectFirst props at the same time.');
+    }
+  }
 
   if (!context.jss.options.insertionPoint && injectFirst && typeof window !== 'undefined') {
     if (!injectFirstNode) {
@@ -37151,7 +37114,7 @@ if ("development" !== 'production') {
 
 var _default = StylesProvider;
 exports.default = _default;
-},{"@babel/runtime/helpers/esm/extends":"../node_modules/@babel/runtime/helpers/esm/extends.js","@babel/runtime/helpers/esm/objectWithoutProperties":"../node_modules/@babel/runtime/helpers/esm/objectWithoutProperties.js","react":"../node_modules/react/index.js","prop-types":"../node_modules/prop-types/index.js","warning":"../node_modules/warning/warning.js","@material-ui/utils":"../node_modules/@material-ui/utils/esm/index.js","../createGenerateClassName":"../node_modules/@material-ui/styles/esm/createGenerateClassName/index.js","jss":"../node_modules/jss/dist/jss.esm.js","../jssPreset":"../node_modules/@material-ui/styles/esm/jssPreset/index.js"}],"../node_modules/@material-ui/styles/esm/StylesProvider/index.js":[function(require,module,exports) {
+},{"@babel/runtime/helpers/esm/extends":"../node_modules/@babel/runtime/helpers/esm/extends.js","@babel/runtime/helpers/esm/objectWithoutProperties":"../node_modules/@babel/runtime/helpers/esm/objectWithoutProperties.js","react":"../node_modules/react/index.js","prop-types":"../node_modules/prop-types/index.js","@material-ui/utils":"../node_modules/@material-ui/utils/esm/index.js","../createGenerateClassName":"../node_modules/@material-ui/styles/esm/createGenerateClassName/index.js","jss":"../node_modules/jss/dist/jss.esm.js","../jssPreset":"../node_modules/@material-ui/styles/esm/jssPreset/index.js"}],"../node_modules/@material-ui/styles/esm/StylesProvider/index.js":[function(require,module,exports) {
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -37189,10 +37152,6 @@ Object.defineProperty(exports, "__esModule", {
 });
 exports.increment = increment;
 
-var _warning = _interopRequireDefault(require("warning"));
-
-function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
-
 /* eslint-disable import/prefer-default-export */
 // Global index counter to preserve source order.
 // We create the style sheet during at the creation of the component,
@@ -37206,10 +37165,16 @@ var indexCounter = -1e9;
 
 function increment() {
   indexCounter += 1;
-  "development" !== "production" ? (0, _warning.default)(indexCounter < 0, ['Material-UI: you might have a memory leak.', 'The indexCounter is not supposed to grow that much.'].join('\n')) : void 0;
+
+  if ("development" !== 'production') {
+    if (indexCounter >= 0) {
+      console.warn(['Material-UI: you might have a memory leak.', 'The indexCounter is not supposed to grow that much.'].join('\n'));
+    }
+  }
+
   return indexCounter;
 }
-},{"warning":"../node_modules/warning/warning.js"}],"../node_modules/deepmerge/dist/cjs.js":[function(require,module,exports) {
+},{}],"../node_modules/deepmerge/dist/cjs.js":[function(require,module,exports) {
 'use strict';
 
 var isMergeableObject = function isMergeableObject(value) {
@@ -37337,8 +37302,6 @@ var _extends2 = _interopRequireDefault(require("@babel/runtime/helpers/esm/exten
 
 var _typeof2 = _interopRequireDefault(require("@babel/runtime/helpers/esm/typeof"));
 
-var _warning = _interopRequireDefault(require("warning"));
-
 var _deepmerge = _interopRequireDefault(require("deepmerge"));
 
 var _noopTheme = _interopRequireDefault(require("./noopTheme"));
@@ -37353,7 +37316,13 @@ function arrayMerge(destination, source) {
 
 function getStylesCreator(stylesOrCreator) {
   var themingEnabled = typeof stylesOrCreator === 'function';
-  "development" !== "production" ? (0, _warning.default)((0, _typeof2.default)(stylesOrCreator) === 'object' || themingEnabled, ['Material-UI: the `styles` argument provided is invalid.', 'You need to provide a function generating the styles or a styles object.'].join('\n')) : void 0;
+
+  if ("development" !== 'production') {
+    if ((0, _typeof2.default)(stylesOrCreator) !== 'object' && !themingEnabled) {
+      console.error(['Material-UI: the `styles` argument provided is invalid.', 'You need to provide a function generating the styles or a styles object.'].join('\n'));
+    }
+  }
+
   return {
     create: function create(theme, name) {
       var styles;
@@ -37361,7 +37330,13 @@ function getStylesCreator(stylesOrCreator) {
       try {
         styles = themingEnabled ? stylesOrCreator(theme) : stylesOrCreator;
       } catch (err) {
-        "development" !== "production" ? (0, _warning.default)(!themingEnabled || theme !== _noopTheme.default, ['Material-UI: the `styles` argument provided is invalid.', 'You are providing a function without a theme in the context.', 'One of the parent elements needs to use a ThemeProvider.'].join('\n')) : void 0;
+        if ("development" !== 'production') {
+          if (themingEnabled === true && theme === _noopTheme.default) {
+            // TODO: prepend error message/name instead
+            console.error(['Material-UI: the `styles` argument provided is invalid.', 'You are providing a function without a theme in the context.', 'One of the parent elements needs to use a ThemeProvider.'].join('\n'));
+          }
+        }
+
         throw err;
       }
 
@@ -37372,7 +37347,12 @@ function getStylesCreator(stylesOrCreator) {
       var overrides = theme.overrides[name];
       var stylesWithOverrides = (0, _extends2.default)({}, styles);
       Object.keys(overrides).forEach(function (key) {
-        "development" !== "production" ? (0, _warning.default)(stylesWithOverrides[key], ['Material-UI: you are trying to override a style that does not exist.', "Fix the `".concat(key, "` key of `theme.overrides.").concat(name, "`.")].join('\n')) : void 0;
+        if ("development" !== 'production') {
+          if (!stylesWithOverrides[key]) {
+            console.warn(['Material-UI: you are trying to override a style that does not exist.', "Fix the `".concat(key, "` key of `theme.overrides.").concat(name, "`.")].join('\n'));
+          }
+        }
+
         stylesWithOverrides[key] = (0, _deepmerge.default)(stylesWithOverrides[key], overrides[key], {
           arrayMerge: arrayMerge
         });
@@ -37385,7 +37365,7 @@ function getStylesCreator(stylesOrCreator) {
 
 var _default = getStylesCreator;
 exports.default = _default;
-},{"@babel/runtime/helpers/esm/extends":"../node_modules/@babel/runtime/helpers/esm/extends.js","@babel/runtime/helpers/esm/typeof":"../node_modules/@babel/runtime/helpers/esm/typeof.js","warning":"../node_modules/warning/warning.js","deepmerge":"../node_modules/deepmerge/dist/cjs.js","./noopTheme":"../node_modules/@material-ui/styles/esm/getStylesCreator/noopTheme.js"}],"../node_modules/@material-ui/styles/esm/getStylesCreator/index.js":[function(require,module,exports) {
+},{"@babel/runtime/helpers/esm/extends":"../node_modules/@babel/runtime/helpers/esm/extends.js","@babel/runtime/helpers/esm/typeof":"../node_modules/@babel/runtime/helpers/esm/typeof.js","deepmerge":"../node_modules/deepmerge/dist/cjs.js","./noopTheme":"../node_modules/@material-ui/styles/esm/getStylesCreator/noopTheme.js"}],"../node_modules/@material-ui/styles/esm/getStylesCreator/index.js":[function(require,module,exports) {
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -37414,8 +37394,6 @@ var _objectWithoutProperties2 = _interopRequireDefault(require("@babel/runtime/h
 var _extends2 = _interopRequireDefault(require("@babel/runtime/helpers/esm/extends"));
 
 var _react = _interopRequireDefault(require("react"));
-
-var _warning = _interopRequireDefault(require("warning"));
 
 var _jss = require("jss");
 
@@ -37541,7 +37519,6 @@ function attach(_ref2, props) {
     var dynamicSheet = stylesOptions.jss.createStyleSheet(sheetManager.dynamicStyles, (0, _extends2.default)({
       link: true
     }, options));
-    "development" !== "production" ? (0, _warning.default)(props, 'Material-UI: props missing.') : void 0;
     dynamicSheet.update(props).attach();
     state.dynamicSheet = dynamicSheet;
     state.classes = (0, _mergeClasses.default)({
@@ -37682,7 +37659,7 @@ function makeStyles(stylesOrCreator) {
 
 var _default = makeStyles;
 exports.default = _default;
-},{"@babel/runtime/helpers/esm/objectWithoutProperties":"../node_modules/@babel/runtime/helpers/esm/objectWithoutProperties.js","@babel/runtime/helpers/esm/extends":"../node_modules/@babel/runtime/helpers/esm/extends.js","react":"../node_modules/react/index.js","warning":"../node_modules/warning/warning.js","jss":"../node_modules/jss/dist/jss.esm.js","../mergeClasses":"../node_modules/@material-ui/styles/esm/mergeClasses/index.js","./multiKeyStore":"../node_modules/@material-ui/styles/esm/makeStyles/multiKeyStore.js","../useTheme":"../node_modules/@material-ui/styles/esm/useTheme/index.js","../StylesProvider":"../node_modules/@material-ui/styles/esm/StylesProvider/index.js","./indexCounter":"../node_modules/@material-ui/styles/esm/makeStyles/indexCounter.js","../getStylesCreator":"../node_modules/@material-ui/styles/esm/getStylesCreator/index.js","../getStylesCreator/noopTheme":"../node_modules/@material-ui/styles/esm/getStylesCreator/noopTheme.js"}],"../node_modules/@material-ui/styles/esm/makeStyles/index.js":[function(require,module,exports) {
+},{"@babel/runtime/helpers/esm/objectWithoutProperties":"../node_modules/@babel/runtime/helpers/esm/objectWithoutProperties.js","@babel/runtime/helpers/esm/extends":"../node_modules/@babel/runtime/helpers/esm/extends.js","react":"../node_modules/react/index.js","jss":"../node_modules/jss/dist/jss.esm.js","../mergeClasses":"../node_modules/@material-ui/styles/esm/mergeClasses/index.js","./multiKeyStore":"../node_modules/@material-ui/styles/esm/makeStyles/multiKeyStore.js","../useTheme":"../node_modules/@material-ui/styles/esm/useTheme/index.js","../StylesProvider":"../node_modules/@material-ui/styles/esm/StylesProvider/index.js","./indexCounter":"../node_modules/@material-ui/styles/esm/makeStyles/indexCounter.js","../getStylesCreator":"../node_modules/@material-ui/styles/esm/getStylesCreator/index.js","../getStylesCreator/noopTheme":"../node_modules/@material-ui/styles/esm/getStylesCreator/noopTheme.js"}],"../node_modules/@material-ui/styles/esm/makeStyles/index.js":[function(require,module,exports) {
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -37952,12 +37929,14 @@ function styled(Component) {
 
     var classNamePrefix = name;
 
-    if ("development" !== 'production' && !name) {
-      // Provide a better DX outside production.
-      var displayName = (0, _utils.getDisplayName)(Component);
+    if ("development" !== 'production') {
+      if (!name) {
+        // Provide a better DX outside production.
+        var displayName = (0, _utils.getDisplayName)(Component);
 
-      if (displayName !== undefined) {
-        classNamePrefix = displayName;
+        if (displayName !== undefined) {
+          classNamePrefix = displayName;
+        }
       }
     }
 
@@ -38102,8 +38081,6 @@ var _react = _interopRequireDefault(require("react"));
 
 var _propTypes = _interopRequireDefault(require("prop-types"));
 
-var _warning = _interopRequireDefault(require("warning"));
-
 var _utils = require("@material-ui/utils");
 
 var _ThemeContext = _interopRequireDefault(require("../useTheme/ThemeContext"));
@@ -38118,7 +38095,13 @@ function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { de
 function mergeOuterLocalTheme(outerTheme, localTheme) {
   if (typeof localTheme === 'function') {
     var mergedTheme = localTheme(outerTheme);
-    "development" !== "production" ? (0, _warning.default)(mergedTheme, ['Material-UI: you should return an object from your theme function, i.e.', '<ThemeProvider theme={() => ({})} />'].join('\n')) : void 0;
+
+    if ("development" !== 'production') {
+      if (!mergedTheme) {
+        console.error(['Material-UI: you should return an object from your theme function, i.e.', '<ThemeProvider theme={() => ({})} />'].join('\n'));
+      }
+    }
+
     return mergedTheme;
   }
 
@@ -38135,7 +38118,12 @@ function ThemeProvider(props) {
   var children = props.children,
       localTheme = props.theme;
   var outerTheme = (0, _useTheme.default)();
-  "development" !== "production" ? (0, _warning.default)(outerTheme !== null || typeof localTheme !== 'function', ['Material-UI: you are providing a theme function prop to the ThemeProvider component:', '<ThemeProvider theme={outerTheme => outerTheme} />', '', 'However, no outer theme is present.', 'Make sure a theme is already injected higher in the React tree ' + 'or provide a theme object.'].join('\n')) : void 0;
+
+  if ("development" !== 'production') {
+    if (outerTheme === null && typeof localTheme === 'function') {
+      console.error(['Material-UI: you are providing a theme function prop to the ThemeProvider component:', '<ThemeProvider theme={outerTheme => outerTheme} />', '', 'However, no outer theme is present.', 'Make sure a theme is already injected higher in the React tree ' + 'or provide a theme object.'].join('\n'));
+    }
+  }
 
   var theme = _react.default.useMemo(function () {
     var output = outerTheme === null ? localTheme : mergeOuterLocalTheme(outerTheme, localTheme);
@@ -38170,7 +38158,7 @@ if ("development" !== 'production') {
 
 var _default = ThemeProvider;
 exports.default = _default;
-},{"@babel/runtime/helpers/esm/extends":"../node_modules/@babel/runtime/helpers/esm/extends.js","react":"../node_modules/react/index.js","prop-types":"../node_modules/prop-types/index.js","warning":"../node_modules/warning/warning.js","@material-ui/utils":"../node_modules/@material-ui/utils/esm/index.js","../useTheme/ThemeContext":"../node_modules/@material-ui/styles/esm/useTheme/ThemeContext.js","../useTheme":"../node_modules/@material-ui/styles/esm/useTheme/index.js","./nested":"../node_modules/@material-ui/styles/esm/ThemeProvider/nested.js"}],"../node_modules/@material-ui/styles/esm/ThemeProvider/index.js":[function(require,module,exports) {
+},{"@babel/runtime/helpers/esm/extends":"../node_modules/@babel/runtime/helpers/esm/extends.js","react":"../node_modules/react/index.js","prop-types":"../node_modules/prop-types/index.js","@material-ui/utils":"../node_modules/@material-ui/utils/esm/index.js","../useTheme/ThemeContext":"../node_modules/@material-ui/styles/esm/useTheme/ThemeContext.js","../useTheme":"../node_modules/@material-ui/styles/esm/useTheme/index.js","./nested":"../node_modules/@material-ui/styles/esm/ThemeProvider/nested.js"}],"../node_modules/@material-ui/styles/esm/ThemeProvider/index.js":[function(require,module,exports) {
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -38226,18 +38214,22 @@ var withStyles = function withStyles(stylesOrCreator) {
         name = options.name,
         stylesOptions = (0, _objectWithoutProperties2.default)(options, ["defaultTheme", "withTheme", "name"]);
 
-    if ("development" !== 'production' && Component === undefined) {
-      throw new Error(['You are calling withStyles(styles)(Component) with an undefined component.', 'You may have forgotten to import it.'].join('\n'));
+    if ("development" !== 'production') {
+      if (Component === undefined) {
+        throw new Error(['You are calling withStyles(styles)(Component) with an undefined component.', 'You may have forgotten to import it.'].join('\n'));
+      }
     }
 
     var classNamePrefix = name;
 
-    if ("development" !== 'production' && !name) {
-      // Provide a better DX outside production.
-      var displayName = (0, _utils.getDisplayName)(Component);
+    if ("development" !== 'production') {
+      if (!name) {
+        // Provide a better DX outside production.
+        var displayName = (0, _utils.getDisplayName)(Component);
 
-      if (displayName !== undefined) {
-        classNamePrefix = displayName;
+        if (displayName !== undefined) {
+          classNamePrefix = displayName;
+        }
       }
     }
 
@@ -38369,8 +38361,10 @@ function withThemeCreator() {
   var defaultTheme = options.defaultTheme;
 
   var withTheme = function withTheme(Component) {
-    if ("development" !== 'production' && Component === undefined) {
-      throw new Error(['You are calling withTheme(Component) with an undefined component.', 'You may have forgotten to import it.'].join('\n'));
+    if ("development" !== 'production') {
+      if (Component === undefined) {
+        throw new Error(['You are calling withTheme(Component) with an undefined component.', 'You may have forgotten to import it.'].join('\n'));
+      }
     }
 
     var WithTheme = _react.default.forwardRef(function WithTheme(props, ref) {
@@ -38575,7 +38569,7 @@ function _interopRequireWildcard(obj) { if (obj && obj.__esModule) { return obj;
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
-/** @license Material-UI v4.4.1
+/** @license Material-UI v4.4.3
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
@@ -38586,7 +38580,6 @@ if ("development" !== 'production' && "development" !== 'test' && typeof window 
   _utils.ponyfillGlobal['__@material-ui/styles-init__'] = _utils.ponyfillGlobal['__@material-ui/styles-init__'] || 0;
 
   if (_utils.ponyfillGlobal['__@material-ui/styles-init__'] === 1) {
-    // eslint-disable-next-line no-console
     console.warn(['It looks like there are several instances of `@material-ui/styles` initialized in this application.', 'This may cause theme propagation issues, broken class names, ' + 'specificity issues, and makes your application bigger without a good reason.', '', 'See https://material-ui.com/r/styles-instance-warning for more info.'].join('\n'));
   }
 
@@ -38748,7 +38741,6 @@ var _extends2 = _interopRequireDefault(require("@babel/runtime/helpers/esm/exten
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
-// import warning from 'warning';
 function createMixins(breakpoints, spacing, mixins) {
   var _toolbar;
 
@@ -38919,10 +38911,6 @@ exports.fade = fade;
 exports.darken = darken;
 exports.lighten = lighten;
 
-var _warning = _interopRequireDefault(require("warning"));
-
-function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
-
 /* eslint-disable no-use-before-define */
 
 /**
@@ -38936,7 +38924,12 @@ function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { de
 function clamp(value) {
   var min = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : 0;
   var max = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : 1;
-  "development" !== "production" ? (0, _warning.default)(value >= min && value <= max, "Material-UI: the value provided ".concat(value, " is out of range [").concat(min, ", ").concat(max, "].")) : void 0;
+
+  if ("development" !== 'production') {
+    if (value < min || value > max) {
+      console.error("Material-UI: the value provided ".concat(value, " is out of range [").concat(min, ", ").concat(max, "]."));
+    }
+  }
 
   if (value < min) {
     return min;
@@ -39213,7 +39206,7 @@ function lighten(color, coefficient) {
 
   return recomposeColor(color);
 }
-},{"warning":"../node_modules/warning/warning.js"}],"../node_modules/@material-ui/core/esm/styles/createPalette.js":[function(require,module,exports) {
+},{}],"../node_modules/@material-ui/core/esm/styles/createPalette.js":[function(require,module,exports) {
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -39225,8 +39218,6 @@ exports.dark = exports.light = void 0;
 var _extends2 = _interopRequireDefault(require("@babel/runtime/helpers/esm/extends"));
 
 var _objectWithoutProperties2 = _interopRequireDefault(require("@babel/runtime/helpers/esm/objectWithoutProperties"));
-
-var _warning = _interopRequireDefault(require("warning"));
 
 var _deepmerge = _interopRequireDefault(require("deepmerge"));
 
@@ -39347,12 +39338,22 @@ function createPalette(palette) {
   // and material-components-web https://github.com/material-components/material-components-web/blob/ac46b8863c4dab9fc22c4c662dc6bd1b65dd652f/packages/mdc-theme/_functions.scss#L54
 
   function getContrastText(background) {
-    "development" !== "production" ? (0, _warning.default)(background, "Material-UI: missing background argument in getContrastText(".concat(background, ").")) : void 0;
+    if ("development" !== 'production') {
+      if (!background) {
+        console.error("Material-UI: missing background argument in getContrastText(".concat(background, ")."));
+      }
+    }
+
     var contrastText = (0, _colorManipulator.getContrastRatio)(background, dark.text.primary) >= contrastThreshold ? dark.text.primary : light.text.primary;
 
     if ("development" !== 'production') {
       var contrast = (0, _colorManipulator.getContrastRatio)(background, contrastText);
-      "development" !== "production" ? (0, _warning.default)(contrast >= 3, ["Material-UI: the contrast ratio of ".concat(contrast, ":1 for ").concat(contrastText, " on ").concat(background), 'falls below the WACG recommended absolute minimum contrast ratio of 3:1.', 'https://www.w3.org/TR/2008/REC-WCAG20-20081211/#visual-audio-contrast-contrast'].join('\n')) : void 0;
+
+      if ("development" !== 'production') {
+        if (contrast < 3) {
+          console.error(["Material-UI: the contrast ratio of ".concat(contrast, ":1 for ").concat(contrastText, " on ").concat(background), 'falls below the WACG recommended absolute minimum contrast ratio of 3:1.', 'https://www.w3.org/TR/2008/REC-WCAG20-20081211/#visual-audio-contrast-contrast'].join('\n'));
+        }
+      }
     }
 
     return contrastText;
@@ -39368,8 +39369,10 @@ function createPalette(palette) {
       color.main = color[mainShade];
     }
 
-    if ("development" !== 'production' && !color.main) {
-      throw new Error(['Material-UI: the color provided to augmentColor(color) is invalid.', "The color object needs to have a `main` property or a `".concat(mainShade, "` property.")].join('\n'));
+    if ("development" !== 'production') {
+      if (!color.main) {
+        throw new Error(['Material-UI: the color provided to augmentColor(color) is invalid.', "The color object needs to have a `main` property or a `".concat(mainShade, "` property.")].join('\n'));
+      }
     }
 
     addLightOrDark(color, 'light', lightShade, tonalOffset);
@@ -39386,7 +39389,13 @@ function createPalette(palette) {
     dark: dark,
     light: light
   };
-  "development" !== "production" ? (0, _warning.default)(types[type], "Material-UI: the palette type `".concat(type, "` is not supported.")) : void 0;
+
+  if ("development" !== 'production') {
+    if (!types[type]) {
+      console.error("Material-UI: the palette type `".concat(type, "` is not supported."));
+    }
+  }
+
   var paletteOutput = (0, _deepmerge.default)((0, _extends2.default)({
     // A collection of common colors.
     common: _common.default,
@@ -39417,7 +39426,7 @@ function createPalette(palette) {
   });
   return paletteOutput;
 }
-},{"@babel/runtime/helpers/esm/extends":"../node_modules/@babel/runtime/helpers/esm/extends.js","@babel/runtime/helpers/esm/objectWithoutProperties":"../node_modules/@babel/runtime/helpers/esm/objectWithoutProperties.js","warning":"../node_modules/warning/warning.js","deepmerge":"../node_modules/deepmerge/dist/cjs.js","../colors/indigo":"../node_modules/@material-ui/core/esm/colors/indigo.js","../colors/pink":"../node_modules/@material-ui/core/esm/colors/pink.js","../colors/grey":"../node_modules/@material-ui/core/esm/colors/grey.js","../colors/red":"../node_modules/@material-ui/core/esm/colors/red.js","../colors/common":"../node_modules/@material-ui/core/esm/colors/common.js","./colorManipulator":"../node_modules/@material-ui/core/esm/styles/colorManipulator.js"}],"../node_modules/@material-ui/core/esm/styles/createTypography.js":[function(require,module,exports) {
+},{"@babel/runtime/helpers/esm/extends":"../node_modules/@babel/runtime/helpers/esm/extends.js","@babel/runtime/helpers/esm/objectWithoutProperties":"../node_modules/@babel/runtime/helpers/esm/objectWithoutProperties.js","deepmerge":"../node_modules/deepmerge/dist/cjs.js","../colors/indigo":"../node_modules/@material-ui/core/esm/colors/indigo.js","../colors/pink":"../node_modules/@material-ui/core/esm/colors/pink.js","../colors/grey":"../node_modules/@material-ui/core/esm/colors/grey.js","../colors/red":"../node_modules/@material-ui/core/esm/colors/red.js","../colors/common":"../node_modules/@material-ui/core/esm/colors/common.js","./colorManipulator":"../node_modules/@material-ui/core/esm/styles/colorManipulator.js"}],"../node_modules/@material-ui/core/esm/styles/createTypography.js":[function(require,module,exports) {
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -39430,8 +39439,6 @@ var _extends2 = _interopRequireDefault(require("@babel/runtime/helpers/esm/exten
 var _objectWithoutProperties2 = _interopRequireDefault(require("@babel/runtime/helpers/esm/objectWithoutProperties"));
 
 var _deepmerge = _interopRequireDefault(require("deepmerge"));
-
-var _warning = _interopRequireDefault(require("warning"));
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
@@ -39469,8 +39476,16 @@ function createTypography(palette, typography) {
       pxToRem2 = _ref.pxToRem,
       other = (0, _objectWithoutProperties2.default)(_ref, ["fontFamily", "fontSize", "fontWeightLight", "fontWeightRegular", "fontWeightMedium", "fontWeightBold", "htmlFontSize", "allVariants", "pxToRem"]);
 
-  "development" !== "production" ? (0, _warning.default)(typeof fontSize === 'number', "Material-UI: 'fontSize' is required to be a number.") : void 0;
-  "development" !== "production" ? (0, _warning.default)(typeof htmlFontSize === 'number', "Material-UI: 'htmlFontSize' is required to be a number.") : void 0;
+  if ("development" !== 'production') {
+    if (typeof fontSize !== 'number') {
+      console.error("Material-UI: 'fontSize' is required to be a number.");
+    }
+
+    if (typeof htmlFontSize !== 'number') {
+      console.error("Material-UI: 'htmlFontSize' is required to be a number.");
+    }
+  }
+
   var coef = fontSize / 14;
 
   var pxToRem = pxToRem2 || function (size) {
@@ -39520,7 +39535,7 @@ function createTypography(palette, typography) {
 
   });
 }
-},{"@babel/runtime/helpers/esm/extends":"../node_modules/@babel/runtime/helpers/esm/extends.js","@babel/runtime/helpers/esm/objectWithoutProperties":"../node_modules/@babel/runtime/helpers/esm/objectWithoutProperties.js","deepmerge":"../node_modules/deepmerge/dist/cjs.js","warning":"../node_modules/warning/warning.js"}],"../node_modules/@material-ui/core/esm/styles/shadows.js":[function(require,module,exports) {
+},{"@babel/runtime/helpers/esm/extends":"../node_modules/@babel/runtime/helpers/esm/extends.js","@babel/runtime/helpers/esm/objectWithoutProperties":"../node_modules/@babel/runtime/helpers/esm/objectWithoutProperties.js","deepmerge":"../node_modules/deepmerge/dist/cjs.js"}],"../node_modules/@material-ui/core/esm/styles/shadows.js":[function(require,module,exports) {
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -39557,11 +39572,6 @@ Object.defineProperty(exports, "__esModule", {
   value: true
 });
 exports.default = createSpacing;
-
-var _warning = _interopRequireDefault(require("warning"));
-
-function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
-
 var warnOnce;
 
 function createSpacing() {
@@ -39578,10 +39588,19 @@ function createSpacing() {
   if (typeof spacingInput === 'function') {
     transform = spacingInput;
   } else {
-    "development" !== "production" ? (0, _warning.default)(typeof spacingInput === 'number', ["Material-UI: the `theme.spacing` value (".concat(spacingInput, ") is invalid."), 'It should be a number or a function.'].join('\n')) : void 0;
+    if ("development" !== 'production') {
+      if (typeof spacingInput !== 'number') {
+        console.error(["Material-UI: the `theme.spacing` value (".concat(spacingInput, ") is invalid."), 'It should be a number or a function.'].join('\n'));
+      }
+    }
 
     transform = function transform(factor) {
-      "development" !== "production" ? (0, _warning.default)(typeof factor === 'number', "Expected spacing argument to be a number, got ".concat(factor)) : void 0;
+      if ("development" !== 'production') {
+        if (typeof factor !== 'number') {
+          console.error("Expected spacing argument to be a number, got ".concat(factor));
+        }
+      }
+
       return spacingInput * factor;
     };
   }
@@ -39591,7 +39610,11 @@ function createSpacing() {
       args[_key] = arguments[_key];
     }
 
-    "development" !== "production" ? (0, _warning.default)(args.length <= 4, "Material-UI: Too many arguments provided, expected between 0 and 4, got ".concat(args.length)) : void 0;
+    if ("development" !== 'production') {
+      if (!(args.length <= 4)) {
+        console.error("Material-UI: Too many arguments provided, expected between 0 and 4, got ".concat(args.length));
+      }
+    }
 
     if (args.length === 0) {
       return transform(1);
@@ -39611,7 +39634,10 @@ function createSpacing() {
   Object.defineProperty(spacing, 'unit', {
     get: function get() {
       if ("development" !== 'production') {
-        "development" !== "production" ? (0, _warning.default)(warnOnce && "development" !== 'test', ['Material-UI: theme.spacing.unit usage has been deprecated.', 'It will be removed in v5.', 'You can replace `theme.spacing.unit * y` with `theme.spacing(y)`.', '', 'You can use the `https://github.com/mui-org/material-ui/tree/master/packages/material-ui-codemod/README.md#theme-spacing-api` migration helper to make the process smoother.'].join('\n')) : void 0;
+        if (!warnOnce || "development" === 'test') {
+          console.error(['Material-UI: theme.spacing.unit usage has been deprecated.', 'It will be removed in v5.', 'You can replace `theme.spacing.unit * y` with `theme.spacing(y)`.', '', 'You can use the `https://github.com/mui-org/material-ui/tree/master/packages/material-ui-codemod/README.md#theme-spacing-api` migration helper to make the process smoother.'].join('\n'));
+        }
+
         warnOnce = true;
       }
 
@@ -39621,7 +39647,7 @@ function createSpacing() {
   spacing.mui = true;
   return spacing;
 }
-},{"warning":"../node_modules/warning/warning.js"}],"../node_modules/@material-ui/core/esm/styles/transitions.js":[function(require,module,exports) {
+},{}],"../node_modules/@material-ui/core/esm/styles/transitions.js":[function(require,module,exports) {
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -39630,8 +39656,6 @@ Object.defineProperty(exports, "__esModule", {
 exports.default = exports.isNumber = exports.isString = exports.formatMs = exports.duration = exports.easing = void 0;
 
 var _objectWithoutProperties2 = _interopRequireDefault(require("@babel/runtime/helpers/esm/objectWithoutProperties"));
-
-var _warning = _interopRequireDefault(require("warning"));
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
@@ -39706,11 +39730,29 @@ var _default = {
         _options$delay = options.delay,
         delay = _options$delay === void 0 ? 0 : _options$delay,
         other = (0, _objectWithoutProperties2.default)(options, ["duration", "easing", "delay"]);
-    "development" !== "production" ? (0, _warning.default)(isString(props) || Array.isArray(props), 'Material-UI: argument "props" must be a string or Array.') : void 0;
-    "development" !== "production" ? (0, _warning.default)(isNumber(durationOption) || isString(durationOption), "Material-UI: argument \"duration\" must be a number or a string but found ".concat(durationOption, ".")) : void 0;
-    "development" !== "production" ? (0, _warning.default)(isString(easingOption), 'Material-UI: argument "easing" must be a string.') : void 0;
-    "development" !== "production" ? (0, _warning.default)(isNumber(delay) || isString(delay), 'Material-UI: argument "delay" must be a number or a string.') : void 0;
-    "development" !== "production" ? (0, _warning.default)(Object.keys(other).length === 0, "Material-UI: unrecognized argument(s) [".concat(Object.keys(other).join(','), "]")) : void 0;
+
+    if ("development" !== 'production') {
+      if (!isString(props) && !Array.isArray(props)) {
+        console.error('Material-UI: argument "props" must be a string or Array.');
+      }
+
+      if (!isNumber(durationOption) && !isString(durationOption)) {
+        console.error("Material-UI: argument \"duration\" must be a number or a string but found ".concat(durationOption, "."));
+      }
+
+      if (!isString(easingOption)) {
+        console.error('Material-UI: argument "easing" must be a string.');
+      }
+
+      if (!isNumber(delay) && !isString(delay)) {
+        console.error('Material-UI: argument "delay" must be a number or a string.');
+      }
+
+      if (Object.keys(other).length !== 0) {
+        console.error("Material-UI: unrecognized argument(s) [".concat(Object.keys(other).join(','), "]"));
+      }
+    }
+
     return (Array.isArray(props) ? props : [props]).map(function (animatedProp) {
       return "".concat(animatedProp, " ").concat(typeof durationOption === 'string' ? durationOption : formatMs(durationOption), " ").concat(easingOption, " ").concat(typeof delay === 'string' ? delay : formatMs(delay));
     }).join(',');
@@ -39726,7 +39768,7 @@ var _default = {
   }
 };
 exports.default = _default;
-},{"@babel/runtime/helpers/esm/objectWithoutProperties":"../node_modules/@babel/runtime/helpers/esm/objectWithoutProperties.js","warning":"../node_modules/warning/warning.js"}],"../node_modules/@material-ui/core/esm/styles/zIndex.js":[function(require,module,exports) {
+},{"@babel/runtime/helpers/esm/objectWithoutProperties":"../node_modules/@babel/runtime/helpers/esm/objectWithoutProperties.js"}],"../node_modules/@material-ui/core/esm/styles/zIndex.js":[function(require,module,exports) {
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -39737,6 +39779,7 @@ exports.default = void 0;
 // like global values in the browser.
 var zIndex = {
   mobileStepper: 1000,
+  speedDial: 1050,
   appBar: 1100,
   drawer: 1200,
   modal: 1300,
@@ -39762,8 +39805,6 @@ var _objectWithoutProperties2 = _interopRequireDefault(require("@babel/runtime/h
 var _deepmerge = _interopRequireDefault(require("deepmerge"));
 
 var _isPlainObject = _interopRequireDefault(require("is-plain-object"));
-
-var _warning = _interopRequireDefault(require("warning"));
 
 var _createBreakpoints = _interopRequireDefault(require("./createBreakpoints"));
 
@@ -39837,9 +39878,12 @@ function createMuiTheme() {
             traverse(child, key, depth + 1);
           }
         } else if (pseudoClasses.indexOf(key) !== -1 && Object.keys(child).length > 0) {
-          "development" !== "production" ? (0, _warning.default)(false, ["Material-UI: the `".concat(parentKey, "` component increases ") + "the CSS specificity of the `".concat(key, "` internal state."), 'You can not override it like this: ', JSON.stringify(node, null, 2), '', 'Instead, you need to use the $ruleName syntax:', JSON.stringify({
-            root: (0, _defineProperty2.default)({}, "&$".concat(key), child)
-          }, null, 2), '', 'https://material-ui.com/r/pseudo-classes-guide'].join('\n')) : void 0; // Remove the style to prevent global conflicts.
+          if ("development" !== 'production') {
+            console.error(["Material-UI: the `".concat(parentKey, "` component increases ") + "the CSS specificity of the `".concat(key, "` internal state."), 'You can not override it like this: ', JSON.stringify(node, null, 2), '', 'Instead, you need to use the $ruleName syntax:', JSON.stringify({
+              root: (0, _defineProperty2.default)({}, "&$".concat(key), child)
+            }, null, 2), '', 'https://material-ui.com/r/pseudo-classes-guide'].join('\n'));
+          } // Remove the style to prevent global conflicts.
+
 
           node[key] = {};
         }
@@ -39849,13 +39893,18 @@ function createMuiTheme() {
     traverse(muiTheme.overrides);
   }
 
-  "development" !== "production" ? (0, _warning.default)(muiTheme.shadows.length === 25, 'Material-UI: the shadows array provided to createMuiTheme should support 25 elevations.') : void 0;
+  if ("development" !== 'production') {
+    if (muiTheme.shadows.length !== 25) {
+      console.error('Material-UI: the shadows array provided to createMuiTheme should support 25 elevations.');
+    }
+  }
+
   return muiTheme;
 }
 
 var _default = createMuiTheme;
 exports.default = _default;
-},{"@babel/runtime/helpers/esm/defineProperty":"../node_modules/@babel/runtime/helpers/esm/defineProperty.js","@babel/runtime/helpers/esm/extends":"../node_modules/@babel/runtime/helpers/esm/extends.js","@babel/runtime/helpers/esm/objectWithoutProperties":"../node_modules/@babel/runtime/helpers/esm/objectWithoutProperties.js","deepmerge":"../node_modules/deepmerge/dist/cjs.js","is-plain-object":"../node_modules/@material-ui/core/node_modules/is-plain-object/index.js","warning":"../node_modules/warning/warning.js","./createBreakpoints":"../node_modules/@material-ui/core/esm/styles/createBreakpoints.js","./createMixins":"../node_modules/@material-ui/core/esm/styles/createMixins.js","./createPalette":"../node_modules/@material-ui/core/esm/styles/createPalette.js","./createTypography":"../node_modules/@material-ui/core/esm/styles/createTypography.js","./shadows":"../node_modules/@material-ui/core/esm/styles/shadows.js","./shape":"../node_modules/@material-ui/core/esm/styles/shape.js","./createSpacing":"../node_modules/@material-ui/core/esm/styles/createSpacing.js","./transitions":"../node_modules/@material-ui/core/esm/styles/transitions.js","./zIndex":"../node_modules/@material-ui/core/esm/styles/zIndex.js"}],"../node_modules/@material-ui/core/esm/styles/defaultTheme.js":[function(require,module,exports) {
+},{"@babel/runtime/helpers/esm/defineProperty":"../node_modules/@babel/runtime/helpers/esm/defineProperty.js","@babel/runtime/helpers/esm/extends":"../node_modules/@babel/runtime/helpers/esm/extends.js","@babel/runtime/helpers/esm/objectWithoutProperties":"../node_modules/@babel/runtime/helpers/esm/objectWithoutProperties.js","deepmerge":"../node_modules/deepmerge/dist/cjs.js","is-plain-object":"../node_modules/@material-ui/core/node_modules/is-plain-object/index.js","./createBreakpoints":"../node_modules/@material-ui/core/esm/styles/createBreakpoints.js","./createMixins":"../node_modules/@material-ui/core/esm/styles/createMixins.js","./createPalette":"../node_modules/@material-ui/core/esm/styles/createPalette.js","./createTypography":"../node_modules/@material-ui/core/esm/styles/createTypography.js","./shadows":"../node_modules/@material-ui/core/esm/styles/shadows.js","./shape":"../node_modules/@material-ui/core/esm/styles/shape.js","./createSpacing":"../node_modules/@material-ui/core/esm/styles/createSpacing.js","./transitions":"../node_modules/@material-ui/core/esm/styles/transitions.js","./zIndex":"../node_modules/@material-ui/core/esm/styles/zIndex.js"}],"../node_modules/@material-ui/core/esm/styles/defaultTheme.js":[function(require,module,exports) {
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -45397,6 +45446,7 @@ var styles = function styles(theme) {
       overflow: 'hidden',
       pointerEvents: 'none',
       position: 'absolute',
+      zIndex: 0,
       top: 0,
       right: 0,
       bottom: 0,
@@ -45802,10 +45852,11 @@ var ButtonBase = _react.default.forwardRef(function ButtonBase(props, ref) {
       centerRipple = _props$centerRipple === void 0 ? false : _props$centerRipple,
       children = props.children,
       classes = props.classes,
-      classNameProp = props.className,
+      className = props.className,
       _props$component = props.component,
       component = _props$component === void 0 ? 'button' : _props$component,
-      disabled = props.disabled,
+      _props$disabled = props.disabled,
+      disabled = _props$disabled === void 0 ? false : _props$disabled,
       _props$disableRipple = props.disableRipple,
       disableRipple = _props$disableRipple === void 0 ? false : _props$disableRipple,
       _props$disableTouchRi = props.disableTouchRipple,
@@ -45977,7 +46028,6 @@ var ButtonBase = _react.default.forwardRef(function ButtonBase(props, ref) {
       onKeyUp(event);
     }
   });
-  var className = (0, _clsx.default)(classes.root, classNameProp, focusVisible && [classes.focusVisible, focusVisibleClassName], disabled && classes.disabled);
   var ComponentProp = component;
 
   if (ComponentProp === 'button' && other.href) {
@@ -46001,7 +46051,7 @@ var ButtonBase = _react.default.forwardRef(function ButtonBase(props, ref) {
   var handleOwnRef = (0, _reactHelpers.useForkRef)(focusVisibleRef, buttonRef);
   var handleRef = (0, _reactHelpers.useForkRef)(handleUserRef, handleOwnRef);
   return _react.default.createElement(ComponentProp, (0, _extends2.default)({
-    className: className,
+    className: (0, _clsx.default)(classes.root, className, focusVisible && [classes.focusVisible, focusVisibleClassName], disabled && classes.disabled),
     onBlur: handleBlur,
     onClick: onClick,
     onFocus: handleFocus,
@@ -46919,8 +46969,6 @@ var _react = _interopRequireDefault(require("react"));
 
 var _propTypes = _interopRequireDefault(require("prop-types"));
 
-var _warning = _interopRequireDefault(require("warning"));
-
 var _clsx = _interopRequireDefault(require("clsx"));
 
 var _utils = require("@material-ui/utils");
@@ -47071,7 +47119,14 @@ var styles = function styles(theme) {
       '&$disabled': {
         opacity: 1 // Reset iOS opacity
 
+      },
+      '&:-webkit-autofill': {
+        animationDuration: '5000s',
+        animationName: '$auto-fill'
       }
+    },
+    '@keyframes auto-fill': {
+      from: {}
     },
 
     /* Styles applied to the `input` element if `margin="dense"`. */
@@ -47166,7 +47221,11 @@ var InputBase = _react.default.forwardRef(function InputBase(props, ref) {
   var inputRef = _react.default.useRef();
 
   var handleInputRefWarning = _react.default.useCallback(function (instance) {
-    "development" !== "production" ? (0, _warning.default)(!instance || instance instanceof HTMLInputElement || instance.focus, ['Material-UI: you have provided a `inputComponent` to the input component', 'that does not correctly handle the `inputRef` prop.', 'Make sure the `inputRef` prop is called with a HTMLInputElement.'].join('\n')) : void 0;
+    if ("development" !== 'production') {
+      if (instance && !(instance instanceof HTMLInputElement) && !instance.focus) {
+        console.error(['Material-UI: you have provided a `inputComponent` to the input component', 'that does not correctly handle the `inputRef` prop.', 'Make sure the `inputRef` prop is called with a HTMLInputElement.'].join('\n'));
+      }
+    }
   }, []);
 
   var handleInputPropsRefProp = (0, _reactHelpers.useForkRef)(inputPropsProp.ref, handleInputRefWarning);
@@ -47208,15 +47267,18 @@ var InputBase = _react.default.forwardRef(function InputBase(props, ref) {
     }
   }, [muiFormControl, disabled, focused, onBlur]);
 
+  var onFilled = muiFormControl && muiFormControl.onFilled;
+  var onEmpty = muiFormControl && muiFormControl.onEmpty;
+
   var checkDirty = _react.default.useCallback(function (obj) {
     if ((0, _utils2.isFilled)(obj)) {
-      if (muiFormControl && muiFormControl.onFilled) {
-        muiFormControl.onFilled();
+      if (onFilled) {
+        onFilled();
       }
-    } else if (muiFormControl && muiFormControl.onEmpty) {
-      muiFormControl.onEmpty();
+    } else if (onEmpty) {
+      onEmpty();
     }
-  }, [muiFormControl]);
+  }, [onFilled, onEmpty]);
 
   useEnhancedEffect(function () {
     if (isControlled) {
@@ -47278,7 +47340,14 @@ var InputBase = _react.default.forwardRef(function InputBase(props, ref) {
 
       onChange.apply(void 0, [event].concat(args));
     }
-  };
+  }; // Check the input state on mount, in case it was filled by the user
+  // or auto filled by the browser before the hydration (for SSR).
+
+
+  _react.default.useEffect(function () {
+    checkDirty(inputRef.current);
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
 
   var handleClick = function handleClick(event) {
     if (inputRef.current && event.currentTarget === event.target) {
@@ -47320,6 +47389,13 @@ var InputBase = _react.default.forwardRef(function InputBase(props, ref) {
     }, inputProps);
   }
 
+  var handleAutoFill = function handleAutoFill() {
+    // Provide a fake value as Chrome might not let you access it for security reasons.
+    checkDirty({
+      value: 'x'
+    });
+  };
+
   return _react.default.createElement("div", (0, _extends2.default)({
     className: (0, _clsx.default)(classes.root, classNameProp, fcs.disabled && classes.disabled, fcs.error && classes.error, fullWidth && classes.fullWidth, fcs.focused && classes.focused, muiFormControl && classes.formControl, multiline && classes.multiline, startAdornment && classes.adornedStart, endAdornment && classes.adornedEnd, {
       dense: classes.marginDense
@@ -47341,6 +47417,7 @@ var InputBase = _react.default.forwardRef(function InputBase(props, ref) {
     defaultValue: defaultValue,
     disabled: fcs.disabled,
     id: id,
+    onAnimationStart: handleAutoFill,
     name: name,
     onBlur: handleBlur,
     onChange: handleChange,
@@ -47539,7 +47616,7 @@ var _default = (0, _withStyles.default)(styles, {
 })(InputBase);
 
 exports.default = _default;
-},{"@babel/runtime/helpers/esm/extends":"../node_modules/@babel/runtime/helpers/esm/extends.js","@babel/runtime/helpers/esm/objectWithoutProperties":"../node_modules/@babel/runtime/helpers/esm/objectWithoutProperties.js","react":"../node_modules/react/index.js","prop-types":"../node_modules/prop-types/index.js","warning":"../node_modules/warning/warning.js","clsx":"../node_modules/clsx/dist/clsx.m.js","@material-ui/utils":"../node_modules/@material-ui/utils/esm/index.js","../FormControl/formControlState":"../node_modules/@material-ui/core/esm/FormControl/formControlState.js","../FormControl/FormControlContext":"../node_modules/@material-ui/core/esm/FormControl/FormControlContext.js","../styles/withStyles":"../node_modules/@material-ui/core/esm/styles/withStyles.js","../utils/reactHelpers":"../node_modules/@material-ui/core/esm/utils/reactHelpers.js","../TextareaAutosize":"../node_modules/@material-ui/core/esm/TextareaAutosize/index.js","./utils":"../node_modules/@material-ui/core/esm/InputBase/utils.js"}],"../node_modules/@material-ui/core/esm/InputBase/index.js":[function(require,module,exports) {
+},{"@babel/runtime/helpers/esm/extends":"../node_modules/@babel/runtime/helpers/esm/extends.js","@babel/runtime/helpers/esm/objectWithoutProperties":"../node_modules/@babel/runtime/helpers/esm/objectWithoutProperties.js","react":"../node_modules/react/index.js","prop-types":"../node_modules/prop-types/index.js","clsx":"../node_modules/clsx/dist/clsx.m.js","@material-ui/utils":"../node_modules/@material-ui/utils/esm/index.js","../FormControl/formControlState":"../node_modules/@material-ui/core/esm/FormControl/formControlState.js","../FormControl/FormControlContext":"../node_modules/@material-ui/core/esm/FormControl/FormControlContext.js","../styles/withStyles":"../node_modules/@material-ui/core/esm/styles/withStyles.js","../utils/reactHelpers":"../node_modules/@material-ui/core/esm/utils/reactHelpers.js","../TextareaAutosize":"../node_modules/@material-ui/core/esm/TextareaAutosize/index.js","./utils":"../node_modules/@material-ui/core/esm/InputBase/utils.js"}],"../node_modules/@material-ui/core/esm/InputBase/index.js":[function(require,module,exports) {
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -49163,8 +49240,6 @@ var _propTypes = _interopRequireDefault(require("prop-types"));
 
 var _clsx = _interopRequireDefault(require("clsx"));
 
-var _warning = _interopRequireDefault(require("warning"));
-
 var _utils = require("../InputBase/utils");
 
 var _withStyles = _interopRequireDefault(require("../styles/withStyles"));
@@ -49318,7 +49393,7 @@ var FormControl = _react.default.forwardRef(function FormControl(props, ref) {
 
     registerEffect = function registerEffect() {
       if (registeredInput.current) {
-        "development" !== "production" ? (0, _warning.default)(false, ['Material-UI: there are multiple InputBase components inside a FromControl.', 'This is not supported. It might cause infinite rendering loops.', 'Only use one InputBase.'].join('\n')) : void 0;
+        console.error(['Material-UI: there are multiple InputBase components inside a FromControl.', 'This is not supported. It might cause infinite rendering loops.', 'Only use one InputBase.'].join('\n'));
       }
 
       registeredInput.current = true;
@@ -49327,6 +49402,14 @@ var FormControl = _react.default.forwardRef(function FormControl(props, ref) {
       };
     };
   }
+
+  var onFilled = _react.default.useCallback(function () {
+    setFilled(true);
+  }, []);
+
+  var onEmpty = _react.default.useCallback(function () {
+    setFilled(false);
+  }, []);
 
   var childContext = {
     adornedStart: adornedStart,
@@ -49339,16 +49422,8 @@ var FormControl = _react.default.forwardRef(function FormControl(props, ref) {
     onBlur: function onBlur() {
       setFocused(false);
     },
-    onEmpty: function onEmpty() {
-      if (filled) {
-        setFilled(false);
-      }
-    },
-    onFilled: function onFilled() {
-      if (!filled) {
-        setFilled(true);
-      }
-    },
+    onEmpty: onEmpty,
+    onFilled: onFilled,
     onFocus: function onFocus() {
       setFocused(true);
     },
@@ -49430,7 +49505,7 @@ var _default = (0, _withStyles.default)(styles, {
 })(FormControl);
 
 exports.default = _default;
-},{"@babel/runtime/helpers/esm/extends":"../node_modules/@babel/runtime/helpers/esm/extends.js","@babel/runtime/helpers/esm/objectWithoutProperties":"../node_modules/@babel/runtime/helpers/esm/objectWithoutProperties.js","react":"../node_modules/react/index.js","prop-types":"../node_modules/prop-types/index.js","clsx":"../node_modules/clsx/dist/clsx.m.js","warning":"../node_modules/warning/warning.js","../InputBase/utils":"../node_modules/@material-ui/core/esm/InputBase/utils.js","../styles/withStyles":"../node_modules/@material-ui/core/esm/styles/withStyles.js","../utils/helpers":"../node_modules/@material-ui/core/esm/utils/helpers.js","../utils/reactHelpers":"../node_modules/@material-ui/core/esm/utils/reactHelpers.js","./FormControlContext":"../node_modules/@material-ui/core/esm/FormControl/FormControlContext.js"}],"../node_modules/@material-ui/core/esm/FormControl/index.js":[function(require,module,exports) {
+},{"@babel/runtime/helpers/esm/extends":"../node_modules/@babel/runtime/helpers/esm/extends.js","@babel/runtime/helpers/esm/objectWithoutProperties":"../node_modules/@babel/runtime/helpers/esm/objectWithoutProperties.js","react":"../node_modules/react/index.js","prop-types":"../node_modules/prop-types/index.js","clsx":"../node_modules/clsx/dist/clsx.m.js","../InputBase/utils":"../node_modules/@material-ui/core/esm/InputBase/utils.js","../styles/withStyles":"../node_modules/@material-ui/core/esm/styles/withStyles.js","../utils/helpers":"../node_modules/@material-ui/core/esm/utils/helpers.js","../utils/reactHelpers":"../node_modules/@material-ui/core/esm/utils/reactHelpers.js","./FormControlContext":"../node_modules/@material-ui/core/esm/FormControl/FormControlContext.js"}],"../node_modules/@material-ui/core/esm/FormControl/index.js":[function(require,module,exports) {
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -50106,8 +50181,6 @@ var _reactDom = _interopRequireDefault(require("react-dom"));
 
 var _propTypes = _interopRequireDefault(require("prop-types"));
 
-var _warning = _interopRequireDefault(require("warning"));
-
 var _ownerDocument = _interopRequireDefault(require("../utils/ownerDocument"));
 
 var _reactHelpers = require("../utils/reactHelpers");
@@ -50168,7 +50241,10 @@ function TrapFocus(props) {
 
     if (!disableAutoFocus && rootRef.current && !rootRef.current.contains(doc.activeElement)) {
       if (!rootRef.current.hasAttribute('tabIndex')) {
-        "development" !== "production" ? (0, _warning.default)(false, ['Material-UI: the modal content node does not accept focus.', 'For the benefit of assistive technologies, ' + 'the tabIndex of the node is being set to "-1".'].join('\n')) : void 0;
+        if ("development" !== 'production') {
+          console.error(['Material-UI: the modal content node does not accept focus.', 'For the benefit of assistive technologies, ' + 'the tabIndex of the node is being set to "-1".'].join('\n'));
+        }
+
         rootRef.current.setAttribute('tabIndex', -1);
       }
 
@@ -50332,7 +50408,7 @@ function TrapFocus(props) {
 
 var _default = TrapFocus;
 exports.default = _default;
-},{"react":"../node_modules/react/index.js","react-dom":"../node_modules/react-dom/index.js","prop-types":"../node_modules/prop-types/index.js","warning":"../node_modules/warning/warning.js","../utils/ownerDocument":"../node_modules/@material-ui/core/esm/utils/ownerDocument.js","../utils/reactHelpers":"../node_modules/@material-ui/core/esm/utils/reactHelpers.js"}],"../node_modules/@material-ui/core/esm/Modal/SimpleBackdrop.js":[function(require,module,exports) {
+},{"react":"../node_modules/react/index.js","react-dom":"../node_modules/react-dom/index.js","prop-types":"../node_modules/prop-types/index.js","../utils/ownerDocument":"../node_modules/@material-ui/core/esm/utils/ownerDocument.js","../utils/reactHelpers":"../node_modules/@material-ui/core/esm/utils/reactHelpers.js"}],"../node_modules/@material-ui/core/esm/Modal/SimpleBackdrop.js":[function(require,module,exports) {
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -51122,8 +51198,6 @@ var _propTypes = _interopRequireDefault(require("prop-types"));
 
 var _clsx = _interopRequireDefault(require("clsx"));
 
-var _warning = _interopRequireDefault(require("warning"));
-
 var _withStyles = _interopRequireDefault(require("../styles/withStyles"));
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
@@ -51162,7 +51236,13 @@ var Paper = _react.default.forwardRef(function Paper(props, ref) {
       _props$elevation = props.elevation,
       elevation = _props$elevation === void 0 ? 1 : _props$elevation,
       other = (0, _objectWithoutProperties2.default)(props, ["classes", "className", "component", "square", "elevation"]);
-  "development" !== "production" ? (0, _warning.default)(elevation >= 0 && elevation < 25, "Material-UI: this elevation `".concat(elevation, "` is not implemented.")) : void 0;
+
+  if ("development" !== 'production') {
+    if (elevation < 0 || elevation >= 25) {
+      console.error("Material-UI: this elevation `".concat(elevation, "` is not implemented."));
+    }
+  }
+
   var className = (0, _clsx.default)(classes.root, classes["elevation".concat(elevation)], classNameProp, !square && classes.rounded);
   return _react.default.createElement(Component, (0, _extends2.default)({
     className: className,
@@ -51210,7 +51290,7 @@ var _default = (0, _withStyles.default)(styles, {
 })(Paper);
 
 exports.default = _default;
-},{"@babel/runtime/helpers/esm/objectWithoutProperties":"../node_modules/@babel/runtime/helpers/esm/objectWithoutProperties.js","@babel/runtime/helpers/esm/extends":"../node_modules/@babel/runtime/helpers/esm/extends.js","react":"../node_modules/react/index.js","prop-types":"../node_modules/prop-types/index.js","clsx":"../node_modules/clsx/dist/clsx.m.js","warning":"../node_modules/warning/warning.js","../styles/withStyles":"../node_modules/@material-ui/core/esm/styles/withStyles.js"}],"../node_modules/@material-ui/core/esm/Paper/index.js":[function(require,module,exports) {
+},{"@babel/runtime/helpers/esm/objectWithoutProperties":"../node_modules/@babel/runtime/helpers/esm/objectWithoutProperties.js","@babel/runtime/helpers/esm/extends":"../node_modules/@babel/runtime/helpers/esm/extends.js","react":"../node_modules/react/index.js","prop-types":"../node_modules/prop-types/index.js","clsx":"../node_modules/clsx/dist/clsx.m.js","../styles/withStyles":"../node_modules/@material-ui/core/esm/styles/withStyles.js"}],"../node_modules/@material-ui/core/esm/Paper/index.js":[function(require,module,exports) {
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -51245,8 +51325,6 @@ var _react = _interopRequireDefault(require("react"));
 var _propTypes = _interopRequireDefault(require("prop-types"));
 
 var _reactDom = _interopRequireDefault(require("react-dom"));
-
-var _warning = _interopRequireDefault(require("warning"));
 
 var _debounce = _interopRequireDefault(require("../utils/debounce"));
 
@@ -51387,7 +51465,12 @@ var Popover = _react.default.forwardRef(function Popover(props, ref) {
 
   var getAnchorOffset = _react.default.useCallback(function (contentAnchorOffset) {
     if (anchorReference === 'anchorPosition') {
-      "development" !== "production" ? (0, _warning.default)(anchorPosition, 'Material-UI: you need to provide a `anchorPosition` prop when using ' + '<Popover anchorReference="anchorPosition" />.') : void 0;
+      if ("development" !== 'production') {
+        if (!anchorPosition) {
+          console.error('Material-UI: you need to provide a `anchorPosition` prop when using ' + '<Popover anchorReference="anchorPosition" />.');
+        }
+      }
+
       return anchorPosition;
     }
 
@@ -51416,7 +51499,11 @@ var Popover = _react.default.forwardRef(function Popover(props, ref) {
       } // != the default value
 
 
-      "development" !== "production" ? (0, _warning.default)(anchorOrigin.vertical === 'top', ['Material-UI: you can not change the default `anchorOrigin.vertical` value ', 'when also providing the `getContentAnchorEl` prop to the popover component.', 'Only use one of the two props.', 'Set `getContentAnchorEl` to `null | undefined`' + ' or leave `anchorOrigin.vertical` unchanged.'].join('\n')) : void 0;
+      if ("development" !== 'production') {
+        if (anchorOrigin.vertical !== 'top') {
+          console.error(['Material-UI: you can not change the default `anchorOrigin.vertical` value ', 'when also providing the `getContentAnchorEl` prop to the popover component.', 'Only use one of the two props.', 'Set `getContentAnchorEl` to `null | undefined`' + ' or leave `anchorOrigin.vertical` unchanged.'].join('\n'));
+        }
+      }
     }
 
     return contentAnchorOffset;
@@ -51474,7 +51561,12 @@ var Popover = _react.default.forwardRef(function Popover(props, ref) {
       elemTransformOrigin.vertical += _diff;
     }
 
-    "development" !== "production" ? (0, _warning.default)(elemRect.height <= heightThreshold || !elemRect.height || !heightThreshold, ['Material-UI: the popover component is too tall.', "Some part of it can not be seen on the screen (".concat(elemRect.height - heightThreshold, "px)."), 'Please consider adding a `max-height` to improve the user-experience.'].join('\n')) : void 0; // Check if the horizontal axis needs shifting
+    if ("development" !== 'production') {
+      if (elemRect.height > heightThreshold && elemRect.height && heightThreshold) {
+        console.error(['Material-UI: the popover component is too tall.', "Some part of it can not be seen on the screen (".concat(elemRect.height - heightThreshold, "px)."), 'Please consider adding a `max-height` to improve the user-experience.'].join('\n'));
+      }
+    } // Check if the horizontal axis needs shifting
+
 
     if (left < marginThreshold) {
       var _diff2 = left - marginThreshold;
@@ -51608,7 +51700,7 @@ var Popover = _react.default.forwardRef(function Popover(props, ref) {
         var box = resolvedAnchorEl.getBoundingClientRect();
 
         if ("development" !== 'test' && box.top === 0 && box.left === 0 && box.right === 0 && box.bottom === 0) {
-          return new Error(['Material-UI: the `anchorEl` prop provided to the component is invalid.', 'The node element should be visible.'].join('\n'));
+          return new Error(['Material-UI: the `anchorEl` prop provided to the component is invalid.', 'The anchor element should be part of the document layout.', "Make sure the element is present in the document or that it's not display none."].join('\n'));
         }
       } else {
         return new Error(['Material-UI: the `anchorEl` prop provided to the component is invalid.', "It should be an Element instance but it's `".concat(resolvedAnchorEl, "` instead.")].join('\n'));
@@ -51780,7 +51872,7 @@ var _default = (0, _withStyles.default)(styles, {
 })(Popover);
 
 exports.default = _default;
-},{"@babel/runtime/helpers/esm/extends":"../node_modules/@babel/runtime/helpers/esm/extends.js","@babel/runtime/helpers/esm/objectWithoutProperties":"../node_modules/@babel/runtime/helpers/esm/objectWithoutProperties.js","react":"../node_modules/react/index.js","prop-types":"../node_modules/prop-types/index.js","react-dom":"../node_modules/react-dom/index.js","warning":"../node_modules/warning/warning.js","../utils/debounce":"../node_modules/@material-ui/core/esm/utils/debounce.js","clsx":"../node_modules/clsx/dist/clsx.m.js","@material-ui/utils":"../node_modules/@material-ui/utils/esm/index.js","../utils/ownerDocument":"../node_modules/@material-ui/core/esm/utils/ownerDocument.js","../utils/ownerWindow":"../node_modules/@material-ui/core/esm/utils/ownerWindow.js","../utils/helpers":"../node_modules/@material-ui/core/esm/utils/helpers.js","../styles/withStyles":"../node_modules/@material-ui/core/esm/styles/withStyles.js","../Modal":"../node_modules/@material-ui/core/esm/Modal/index.js","../Grow":"../node_modules/@material-ui/core/esm/Grow/index.js","../Paper":"../node_modules/@material-ui/core/esm/Paper/index.js"}],"../node_modules/@material-ui/core/esm/Popover/index.js":[function(require,module,exports) {
+},{"@babel/runtime/helpers/esm/extends":"../node_modules/@babel/runtime/helpers/esm/extends.js","@babel/runtime/helpers/esm/objectWithoutProperties":"../node_modules/@babel/runtime/helpers/esm/objectWithoutProperties.js","react":"../node_modules/react/index.js","prop-types":"../node_modules/prop-types/index.js","react-dom":"../node_modules/react-dom/index.js","../utils/debounce":"../node_modules/@material-ui/core/esm/utils/debounce.js","clsx":"../node_modules/clsx/dist/clsx.m.js","@material-ui/utils":"../node_modules/@material-ui/utils/esm/index.js","../utils/ownerDocument":"../node_modules/@material-ui/core/esm/utils/ownerDocument.js","../utils/ownerWindow":"../node_modules/@material-ui/core/esm/utils/ownerWindow.js","../utils/helpers":"../node_modules/@material-ui/core/esm/utils/helpers.js","../styles/withStyles":"../node_modules/@material-ui/core/esm/styles/withStyles.js","../Modal":"../node_modules/@material-ui/core/esm/Modal/index.js","../Grow":"../node_modules/@material-ui/core/esm/Grow/index.js","../Paper":"../node_modules/@material-ui/core/esm/Paper/index.js"}],"../node_modules/@material-ui/core/esm/Popover/index.js":[function(require,module,exports) {
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -52252,8 +52344,6 @@ var _Popover = _interopRequireDefault(require("../Popover"));
 
 var _MenuList = _interopRequireDefault(require("../MenuList"));
 
-var _warning = _interopRequireDefault(require("warning"));
-
 var _reactDom = _interopRequireDefault(require("react-dom"));
 
 var _reactHelpers = require("../utils/reactHelpers");
@@ -52349,7 +52439,11 @@ var Menu = _react.default.forwardRef(function Menu(props, ref) {
       return null;
     }
 
-    "development" !== "production" ? (0, _warning.default)(child.type !== _react.default.Fragment, ["Material-UI: the Menu component doesn't accept a Fragment as a child.", 'Consider providing an array instead.'].join('\n')) : void 0;
+    if ("development" !== 'production') {
+      if (child.type === _react.default.Fragment) {
+        console.error(["Material-UI: the Menu component doesn't accept a Fragment as a child.", 'Consider providing an array instead.'].join('\n'));
+      }
+    }
 
     if (firstValidElementIndex === null) {
       firstValidElementIndex = index;
@@ -52521,7 +52615,7 @@ var _default = (0, _withStyles.default)(styles, {
 })(Menu);
 
 exports.default = _default;
-},{"@babel/runtime/helpers/esm/extends":"../node_modules/@babel/runtime/helpers/esm/extends.js","@babel/runtime/helpers/esm/objectWithoutProperties":"../node_modules/@babel/runtime/helpers/esm/objectWithoutProperties.js","react":"../node_modules/react/index.js","prop-types":"../node_modules/prop-types/index.js","clsx":"../node_modules/clsx/dist/clsx.m.js","../styles/withStyles":"../node_modules/@material-ui/core/esm/styles/withStyles.js","../Popover":"../node_modules/@material-ui/core/esm/Popover/index.js","../MenuList":"../node_modules/@material-ui/core/esm/MenuList/index.js","warning":"../node_modules/warning/warning.js","react-dom":"../node_modules/react-dom/index.js","../utils/reactHelpers":"../node_modules/@material-ui/core/esm/utils/reactHelpers.js","../styles/useTheme":"../node_modules/@material-ui/core/esm/styles/useTheme.js"}],"../node_modules/@material-ui/core/esm/Select/SelectInput.js":[function(require,module,exports) {
+},{"@babel/runtime/helpers/esm/extends":"../node_modules/@babel/runtime/helpers/esm/extends.js","@babel/runtime/helpers/esm/objectWithoutProperties":"../node_modules/@babel/runtime/helpers/esm/objectWithoutProperties.js","react":"../node_modules/react/index.js","prop-types":"../node_modules/prop-types/index.js","clsx":"../node_modules/clsx/dist/clsx.m.js","../styles/withStyles":"../node_modules/@material-ui/core/esm/styles/withStyles.js","../Popover":"../node_modules/@material-ui/core/esm/Popover/index.js","../MenuList":"../node_modules/@material-ui/core/esm/MenuList/index.js","react-dom":"../node_modules/react-dom/index.js","../utils/reactHelpers":"../node_modules/@material-ui/core/esm/utils/reactHelpers.js","../styles/useTheme":"../node_modules/@material-ui/core/esm/styles/useTheme.js"}],"../node_modules/@material-ui/core/esm/Select/SelectInput.js":[function(require,module,exports) {
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -52542,8 +52636,6 @@ var _react = _interopRequireDefault(require("react"));
 var _propTypes = _interopRequireDefault(require("prop-types"));
 
 var _clsx = _interopRequireDefault(require("clsx"));
-
-var _warning = _interopRequireDefault(require("warning"));
 
 var _helpers = require("../utils/helpers");
 
@@ -52598,8 +52690,7 @@ var SelectInput = _react.default.forwardRef(function SelectInput(props, ref) {
       required = props.required,
       SelectDisplayProps = props.SelectDisplayProps,
       tabIndexProp = props.tabIndex,
-      _props$type = props.type,
-      type = _props$type === void 0 ? 'hidden' : _props$type,
+      type = props.type,
       value = props.value,
       _props$variant = props.variant,
       variant = _props$variant === void 0 ? 'standard' : _props$variant,
@@ -52763,7 +52854,12 @@ var SelectInput = _react.default.forwardRef(function SelectInput(props, ref) {
       return null;
     }
 
-    "development" !== "production" ? (0, _warning.default)(child.type !== _react.default.Fragment, ["Material-UI: the Select component doesn't accept a Fragment as a child.", 'Consider providing an array instead.'].join('\n')) : void 0;
+    if ("development" !== 'production') {
+      if (child.type === _react.default.Fragment) {
+        console.error(["Material-UI: the Select component doesn't accept a Fragment as a child.", 'Consider providing an array instead.'].join('\n'));
+      }
+    }
+
     var selected;
 
     if (multiple) {
@@ -52841,7 +52937,7 @@ var SelectInput = _react.default.forwardRef(function SelectInput(props, ref) {
     value: Array.isArray(value) ? value.join(',') : value,
     name: name,
     ref: inputRef,
-    type: type,
+    type: "hidden",
     autoFocus: autoFocus
   }, other)), _react.default.createElement(IconComponent, {
     className: (0, _clsx.default)(classes.icon, classes["icon".concat((0, _helpers.capitalize)(variant))])
@@ -52905,10 +53001,11 @@ var SelectInput = _react.default.forwardRef(function SelectInput(props, ref) {
   /**
    * The icon that displays the arrow.
    */
-  IconComponent: _propTypes.default.elementType,
+  IconComponent: _propTypes.default.elementType.isRequired,
 
   /**
-   * Use that prop to pass a ref to the native select element.
+   * Imperative handle implementing `{ value: T, node: HTMLElement, focus(): void }`
+   * Equivalent to `ref`
    */
   inputRef: _utils.refType,
 
@@ -52998,7 +53095,7 @@ var SelectInput = _react.default.forwardRef(function SelectInput(props, ref) {
   /**
    * @ignore
    */
-  type: _propTypes.default.string,
+  type: _propTypes.default.any,
 
   /**
    * The input value.
@@ -53012,7 +53109,7 @@ var SelectInput = _react.default.forwardRef(function SelectInput(props, ref) {
 } : void 0;
 var _default = SelectInput;
 exports.default = _default;
-},{"@babel/runtime/helpers/esm/extends":"../node_modules/@babel/runtime/helpers/esm/extends.js","@babel/runtime/helpers/esm/toConsumableArray":"../node_modules/@babel/runtime/helpers/esm/toConsumableArray.js","@babel/runtime/helpers/esm/objectWithoutProperties":"../node_modules/@babel/runtime/helpers/esm/objectWithoutProperties.js","@babel/runtime/helpers/esm/typeof":"../node_modules/@babel/runtime/helpers/esm/typeof.js","react":"../node_modules/react/index.js","prop-types":"../node_modules/prop-types/index.js","clsx":"../node_modules/clsx/dist/clsx.m.js","warning":"../node_modules/warning/warning.js","../utils/helpers":"../node_modules/@material-ui/core/esm/utils/helpers.js","@material-ui/utils":"../node_modules/@material-ui/utils/esm/index.js","../Menu/Menu":"../node_modules/@material-ui/core/esm/Menu/Menu.js","../InputBase/utils":"../node_modules/@material-ui/core/esm/InputBase/utils.js","../utils/reactHelpers":"../node_modules/@material-ui/core/esm/utils/reactHelpers.js"}],"../node_modules/@material-ui/core/esm/SvgIcon/SvgIcon.js":[function(require,module,exports) {
+},{"@babel/runtime/helpers/esm/extends":"../node_modules/@babel/runtime/helpers/esm/extends.js","@babel/runtime/helpers/esm/toConsumableArray":"../node_modules/@babel/runtime/helpers/esm/toConsumableArray.js","@babel/runtime/helpers/esm/objectWithoutProperties":"../node_modules/@babel/runtime/helpers/esm/objectWithoutProperties.js","@babel/runtime/helpers/esm/typeof":"../node_modules/@babel/runtime/helpers/esm/typeof.js","react":"../node_modules/react/index.js","prop-types":"../node_modules/prop-types/index.js","clsx":"../node_modules/clsx/dist/clsx.m.js","../utils/helpers":"../node_modules/@material-ui/core/esm/utils/helpers.js","@material-ui/utils":"../node_modules/@material-ui/utils/esm/index.js","../Menu/Menu":"../node_modules/@material-ui/core/esm/Menu/Menu.js","../InputBase/utils":"../node_modules/@material-ui/core/esm/InputBase/utils.js","../utils/reactHelpers":"../node_modules/@material-ui/core/esm/utils/reactHelpers.js"}],"../node_modules/@material-ui/core/esm/SvgIcon/SvgIcon.js":[function(require,module,exports) {
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -53862,8 +53959,6 @@ var _react = _interopRequireDefault(require("react"));
 
 var _reactDom = _interopRequireDefault(require("react-dom"));
 
-var _warning = _interopRequireDefault(require("warning"));
-
 var _propTypes = _interopRequireDefault(require("prop-types"));
 
 var _clsx = _interopRequireDefault(require("clsx"));
@@ -53984,7 +54079,12 @@ var TextField = _react.default.forwardRef(function TextField(props, ref) {
     }
   }, [variant, required, label]);
 
-  "development" !== "production" ? (0, _warning.default)(!select || Boolean(children), 'Material-UI: `children` must be passed when using the `TextField` component with `select`.') : void 0;
+  if ("development" !== 'production') {
+    if (select && !children) {
+      console.error('Material-UI: `children` must be passed when using the `TextField` component with `select`.');
+    }
+  }
+
   var InputMore = {};
 
   if (variant === 'outlined') {
@@ -54222,7 +54322,7 @@ var _default = (0, _withStyles.default)(styles, {
 })(TextField);
 
 exports.default = _default;
-},{"@babel/runtime/helpers/esm/extends":"../node_modules/@babel/runtime/helpers/esm/extends.js","@babel/runtime/helpers/esm/objectWithoutProperties":"../node_modules/@babel/runtime/helpers/esm/objectWithoutProperties.js","react":"../node_modules/react/index.js","react-dom":"../node_modules/react-dom/index.js","warning":"../node_modules/warning/warning.js","prop-types":"../node_modules/prop-types/index.js","clsx":"../node_modules/clsx/dist/clsx.m.js","@material-ui/utils":"../node_modules/@material-ui/utils/esm/index.js","../Input":"../node_modules/@material-ui/core/esm/Input/index.js","../FilledInput":"../node_modules/@material-ui/core/esm/FilledInput/index.js","../OutlinedInput":"../node_modules/@material-ui/core/esm/OutlinedInput/index.js","../InputLabel":"../node_modules/@material-ui/core/esm/InputLabel/index.js","../FormControl":"../node_modules/@material-ui/core/esm/FormControl/index.js","../FormHelperText":"../node_modules/@material-ui/core/esm/FormHelperText/index.js","../Select":"../node_modules/@material-ui/core/esm/Select/index.js","../styles/withStyles":"../node_modules/@material-ui/core/esm/styles/withStyles.js"}],"../node_modules/@material-ui/core/esm/TextField/index.js":[function(require,module,exports) {
+},{"@babel/runtime/helpers/esm/extends":"../node_modules/@babel/runtime/helpers/esm/extends.js","@babel/runtime/helpers/esm/objectWithoutProperties":"../node_modules/@babel/runtime/helpers/esm/objectWithoutProperties.js","react":"../node_modules/react/index.js","react-dom":"../node_modules/react-dom/index.js","prop-types":"../node_modules/prop-types/index.js","clsx":"../node_modules/clsx/dist/clsx.m.js","@material-ui/utils":"../node_modules/@material-ui/utils/esm/index.js","../Input":"../node_modules/@material-ui/core/esm/Input/index.js","../FilledInput":"../node_modules/@material-ui/core/esm/FilledInput/index.js","../OutlinedInput":"../node_modules/@material-ui/core/esm/OutlinedInput/index.js","../InputLabel":"../node_modules/@material-ui/core/esm/InputLabel/index.js","../FormControl":"../node_modules/@material-ui/core/esm/FormControl/index.js","../FormHelperText":"../node_modules/@material-ui/core/esm/FormHelperText/index.js","../Select":"../node_modules/@material-ui/core/esm/Select/index.js","../styles/withStyles":"../node_modules/@material-ui/core/esm/styles/withStyles.js"}],"../node_modules/@material-ui/core/esm/TextField/index.js":[function(require,module,exports) {
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -54238,7 +54338,1350 @@ Object.defineProperty(exports, "default", {
 var _TextField = _interopRequireDefault(require("./TextField"));
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
-},{"./TextField":"../node_modules/@material-ui/core/esm/TextField/TextField.js"}],"index.tsx":[function(require,module,exports) {
+},{"./TextField":"../node_modules/@material-ui/core/esm/TextField/TextField.js"}],"../node_modules/@material-ui/core/esm/ClickAwayListener/ClickAwayListener.js":[function(require,module,exports) {
+"use strict";
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.default = void 0;
+
+var _react = _interopRequireDefault(require("react"));
+
+var _reactDom = _interopRequireDefault(require("react-dom"));
+
+var _propTypes = _interopRequireDefault(require("prop-types"));
+
+var _ownerDocument = _interopRequireDefault(require("../utils/ownerDocument"));
+
+var _reactHelpers = require("../utils/reactHelpers");
+
+var _useEventCallback = _interopRequireDefault(require("../utils/useEventCallback"));
+
+var _utils = require("@material-ui/utils");
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+function useMountedRef() {
+  var mountedRef = _react.default.useRef(false);
+
+  _react.default.useEffect(function () {
+    mountedRef.current = true;
+    return function () {
+      mountedRef.current = false;
+    };
+  }, []);
+
+  return mountedRef;
+}
+
+function mapEventPropToEvent(eventProp) {
+  return eventProp.substring(2).toLowerCase();
+}
+/**
+ * Listen for click events that occur somewhere in the document, outside of the element itself.
+ * For instance, if you need to hide a menu when people click anywhere else on your page.
+ */
+
+
+var ClickAwayListener = _react.default.forwardRef(function ClickAwayListener(props, ref) {
+  var children = props.children,
+      _props$mouseEvent = props.mouseEvent,
+      mouseEvent = _props$mouseEvent === void 0 ? 'onClick' : _props$mouseEvent,
+      _props$touchEvent = props.touchEvent,
+      touchEvent = _props$touchEvent === void 0 ? 'onTouchEnd' : _props$touchEvent,
+      onClickAway = props.onClickAway;
+  var mountedRef = useMountedRef();
+
+  var movedRef = _react.default.useRef(false);
+
+  var nodeRef = _react.default.useRef(null);
+
+  var handleNodeRef = (0, _reactHelpers.useForkRef)(nodeRef, ref); // can be removed once we drop support for non ref forwarding class components
+
+  var handleOwnRef = _react.default.useCallback(function (instance) {
+    // #StrictMode ready
+    (0, _reactHelpers.setRef)(handleNodeRef, _reactDom.default.findDOMNode(instance));
+  }, [handleNodeRef]);
+
+  var handleRef = (0, _reactHelpers.useForkRef)(children.ref, handleOwnRef);
+  var handleClickAway = (0, _useEventCallback.default)(function (event) {
+    // Ignore events that have been `event.preventDefault()` marked.
+    if (event.defaultPrevented) {
+      return;
+    } // IE 11 support, which trigger the handleClickAway even after the unbind
+
+
+    if (!mountedRef.current) {
+      return;
+    } // Do not act if user performed touchmove
+
+
+    if (movedRef.current) {
+      movedRef.current = false;
+      return;
+    }
+
+    var node = nodeRef.current; // The child might render null.
+
+    if (!node) {
+      return;
+    }
+
+    var doc = (0, _ownerDocument.default)(node);
+
+    if (doc.documentElement && doc.documentElement.contains(event.target) && !node.contains(event.target)) {
+      onClickAway(event);
+    }
+  });
+
+  var handleTouchMove = _react.default.useCallback(function () {
+    movedRef.current = true;
+  }, []);
+
+  _react.default.useEffect(function () {
+    if (touchEvent !== false) {
+      var mappedTouchEvent = mapEventPropToEvent(touchEvent);
+      document.addEventListener(mappedTouchEvent, handleClickAway);
+      document.addEventListener('touchmove', handleTouchMove);
+      return function () {
+        document.removeEventListener(mappedTouchEvent, handleClickAway);
+        document.removeEventListener('touchmove', handleTouchMove);
+      };
+    }
+
+    return undefined;
+  }, [handleClickAway, handleTouchMove, touchEvent]);
+
+  _react.default.useEffect(function () {
+    if (mouseEvent !== false) {
+      var mappedMouseEvent = mapEventPropToEvent(mouseEvent);
+      document.addEventListener(mappedMouseEvent, handleClickAway);
+      return function () {
+        document.removeEventListener(mappedMouseEvent, handleClickAway);
+      };
+    }
+
+    return undefined;
+  }, [handleClickAway, mouseEvent]);
+
+  return _react.default.createElement(_react.default.Fragment, null, _react.default.cloneElement(children, {
+    ref: handleRef
+  }));
+});
+
+"development" !== "production" ? ClickAwayListener.propTypes = {
+  /**
+   * The wrapped element.
+   */
+  children: _utils.elementAcceptingRef.isRequired,
+
+  /**
+   * The mouse event to listen to. You can disable the listener by providing `false`.
+   */
+  mouseEvent: _propTypes.default.oneOf(['onClick', 'onMouseDown', 'onMouseUp', false]),
+
+  /**
+   * Callback fired when a "click away" event is detected.
+   */
+  onClickAway: _propTypes.default.func.isRequired,
+
+  /**
+   * The touch event to listen to. You can disable the listener by providing `false`.
+   */
+  touchEvent: _propTypes.default.oneOf(['onTouchStart', 'onTouchEnd', false])
+} : void 0;
+
+if ("development" !== 'production') {
+  // eslint-disable-next-line
+  ClickAwayListener['propTypes' + ''] = (0, _utils.exactProp)(ClickAwayListener.propTypes);
+}
+
+var _default = ClickAwayListener;
+exports.default = _default;
+},{"react":"../node_modules/react/index.js","react-dom":"../node_modules/react-dom/index.js","prop-types":"../node_modules/prop-types/index.js","../utils/ownerDocument":"../node_modules/@material-ui/core/esm/utils/ownerDocument.js","../utils/reactHelpers":"../node_modules/@material-ui/core/esm/utils/reactHelpers.js","../utils/useEventCallback":"../node_modules/@material-ui/core/esm/utils/useEventCallback.js","@material-ui/utils":"../node_modules/@material-ui/utils/esm/index.js"}],"../node_modules/@material-ui/core/esm/ClickAwayListener/index.js":[function(require,module,exports) {
+"use strict";
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+Object.defineProperty(exports, "default", {
+  enumerable: true,
+  get: function () {
+    return _ClickAwayListener.default;
+  }
+});
+
+var _ClickAwayListener = _interopRequireDefault(require("./ClickAwayListener"));
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+},{"./ClickAwayListener":"../node_modules/@material-ui/core/esm/ClickAwayListener/ClickAwayListener.js"}],"../node_modules/@material-ui/core/esm/SnackbarContent/SnackbarContent.js":[function(require,module,exports) {
+"use strict";
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.default = exports.styles = void 0;
+
+var _extends2 = _interopRequireDefault(require("@babel/runtime/helpers/esm/extends"));
+
+var _objectWithoutProperties2 = _interopRequireDefault(require("@babel/runtime/helpers/esm/objectWithoutProperties"));
+
+var _defineProperty2 = _interopRequireDefault(require("@babel/runtime/helpers/esm/defineProperty"));
+
+var _react = _interopRequireDefault(require("react"));
+
+var _propTypes = _interopRequireDefault(require("prop-types"));
+
+var _clsx = _interopRequireDefault(require("clsx"));
+
+var _withStyles = _interopRequireDefault(require("../styles/withStyles"));
+
+var _Paper = _interopRequireDefault(require("../Paper"));
+
+var _Typography = _interopRequireDefault(require("../Typography"));
+
+var _colorManipulator = require("../styles/colorManipulator");
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+var styles = function styles(theme) {
+  var emphasis = theme.palette.type === 'light' ? 0.8 : 0.98;
+  var backgroundColor = (0, _colorManipulator.emphasize)(theme.palette.background.default, emphasis);
+  return {
+    /* Styles applied to the root element. */
+    root: (0, _defineProperty2.default)({
+      color: theme.palette.getContrastText(backgroundColor),
+      backgroundColor: backgroundColor,
+      display: 'flex',
+      alignItems: 'center',
+      flexWrap: 'wrap',
+      padding: '6px 16px',
+      borderRadius: theme.shape.borderRadius,
+      flexGrow: 1
+    }, theme.breakpoints.up('sm'), {
+      flexGrow: 'initial',
+      minWidth: 288
+    }),
+
+    /* Styles applied to the message wrapper element. */
+    message: {
+      padding: '8px 0'
+    },
+
+    /* Styles applied to the action wrapper element if `action` is provided. */
+    action: {
+      display: 'flex',
+      alignItems: 'center',
+      marginLeft: 'auto',
+      paddingLeft: 16,
+      marginRight: -8
+    }
+  };
+};
+
+exports.styles = styles;
+
+var SnackbarContent = _react.default.forwardRef(function SnackbarContent(props, ref) {
+  var action = props.action,
+      classes = props.classes,
+      className = props.className,
+      message = props.message,
+      other = (0, _objectWithoutProperties2.default)(props, ["action", "classes", "className", "message"]);
+  return _react.default.createElement(_Paper.default, (0, _extends2.default)({
+    component: _Typography.default,
+    variant: "body2",
+    variantMapping: {
+      body1: 'div',
+      body2: 'div'
+    },
+    role: "alertdialog",
+    square: true,
+    elevation: 6,
+    className: (0, _clsx.default)(classes.root, className),
+    ref: ref
+  }, other), _react.default.createElement("div", {
+    className: classes.message
+  }, message), action ? _react.default.createElement("div", {
+    className: classes.action
+  }, action) : null);
+});
+
+"development" !== "production" ? SnackbarContent.propTypes = {
+  /**
+   * The action to display.
+   */
+  action: _propTypes.default.node,
+
+  /**
+   * Override or extend the styles applied to the component.
+   * See [CSS API](#css) below for more details.
+   */
+  classes: _propTypes.default.object.isRequired,
+
+  /**
+   * @ignore
+   */
+  className: _propTypes.default.string,
+
+  /**
+   * The message to display.
+   */
+  message: _propTypes.default.node
+} : void 0;
+
+var _default = (0, _withStyles.default)(styles, {
+  name: 'MuiSnackbarContent'
+})(SnackbarContent);
+
+exports.default = _default;
+},{"@babel/runtime/helpers/esm/extends":"../node_modules/@babel/runtime/helpers/esm/extends.js","@babel/runtime/helpers/esm/objectWithoutProperties":"../node_modules/@babel/runtime/helpers/esm/objectWithoutProperties.js","@babel/runtime/helpers/esm/defineProperty":"../node_modules/@babel/runtime/helpers/esm/defineProperty.js","react":"../node_modules/react/index.js","prop-types":"../node_modules/prop-types/index.js","clsx":"../node_modules/clsx/dist/clsx.m.js","../styles/withStyles":"../node_modules/@material-ui/core/esm/styles/withStyles.js","../Paper":"../node_modules/@material-ui/core/esm/Paper/index.js","../Typography":"../node_modules/@material-ui/core/esm/Typography/index.js","../styles/colorManipulator":"../node_modules/@material-ui/core/esm/styles/colorManipulator.js"}],"../node_modules/@material-ui/core/esm/SnackbarContent/index.js":[function(require,module,exports) {
+"use strict";
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+Object.defineProperty(exports, "default", {
+  enumerable: true,
+  get: function () {
+    return _SnackbarContent.default;
+  }
+});
+
+var _SnackbarContent = _interopRequireDefault(require("./SnackbarContent"));
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+},{"./SnackbarContent":"../node_modules/@material-ui/core/esm/SnackbarContent/SnackbarContent.js"}],"../node_modules/@material-ui/core/esm/Snackbar/Snackbar.js":[function(require,module,exports) {
+"use strict";
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.default = exports.styles = void 0;
+
+var _objectWithoutProperties2 = _interopRequireDefault(require("@babel/runtime/helpers/esm/objectWithoutProperties"));
+
+var _defineProperty2 = _interopRequireDefault(require("@babel/runtime/helpers/esm/defineProperty"));
+
+var _extends2 = _interopRequireDefault(require("@babel/runtime/helpers/esm/extends"));
+
+var _react = _interopRequireDefault(require("react"));
+
+var _propTypes = _interopRequireDefault(require("prop-types"));
+
+var _clsx = _interopRequireDefault(require("clsx"));
+
+var _withStyles = _interopRequireDefault(require("../styles/withStyles"));
+
+var _transitions = require("../styles/transitions");
+
+var _ClickAwayListener = _interopRequireDefault(require("../ClickAwayListener"));
+
+var _helpers = require("../utils/helpers");
+
+var _Grow = _interopRequireDefault(require("../Grow"));
+
+var _SnackbarContent = _interopRequireDefault(require("../SnackbarContent"));
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+var styles = function styles(theme) {
+  var top1 = {
+    top: 8
+  };
+  var bottom1 = {
+    bottom: 8
+  };
+  var right = {
+    justifyContent: 'flex-end'
+  };
+  var left = {
+    justifyContent: 'flex-start'
+  };
+  var top3 = {
+    top: 24
+  };
+  var bottom3 = {
+    bottom: 24
+  };
+  var right3 = {
+    right: 24
+  };
+  var left3 = {
+    left: 24
+  };
+  var center = {
+    left: '50%',
+    right: 'auto',
+    transform: 'translateX(-50%)'
+  };
+  return {
+    /* Styles applied to the root element. */
+    root: {
+      zIndex: theme.zIndex.snackbar,
+      position: 'fixed',
+      display: 'flex',
+      left: 8,
+      right: 8,
+      justifyContent: 'center',
+      alignItems: 'center'
+    },
+
+    /* Styles applied to the root element if `anchorOrigin={{ 'top', 'center' }}`. */
+    anchorOriginTopCenter: (0, _extends2.default)({}, top1, (0, _defineProperty2.default)({}, theme.breakpoints.up('sm'), (0, _extends2.default)({}, top3, {}, center))),
+
+    /* Styles applied to the root element if `anchorOrigin={{ 'bottom', 'center' }}`. */
+    anchorOriginBottomCenter: (0, _extends2.default)({}, bottom1, (0, _defineProperty2.default)({}, theme.breakpoints.up('sm'), (0, _extends2.default)({}, bottom3, {}, center))),
+
+    /* Styles applied to the root element if `anchorOrigin={{ 'top', 'right' }}`. */
+    anchorOriginTopRight: (0, _extends2.default)({}, top1, {}, right, (0, _defineProperty2.default)({}, theme.breakpoints.up('sm'), (0, _extends2.default)({
+      left: 'auto'
+    }, top3, {}, right3))),
+
+    /* Styles applied to the root element if `anchorOrigin={{ 'bottom', 'right' }}`. */
+    anchorOriginBottomRight: (0, _extends2.default)({}, bottom1, {}, right, (0, _defineProperty2.default)({}, theme.breakpoints.up('sm'), (0, _extends2.default)({
+      left: 'auto'
+    }, bottom3, {}, right3))),
+
+    /* Styles applied to the root element if `anchorOrigin={{ 'top', 'left' }}`. */
+    anchorOriginTopLeft: (0, _extends2.default)({}, top1, {}, left, (0, _defineProperty2.default)({}, theme.breakpoints.up('sm'), (0, _extends2.default)({
+      right: 'auto'
+    }, top3, {}, left3))),
+
+    /* Styles applied to the root element if `anchorOrigin={{ 'bottom', 'left' }}`. */
+    anchorOriginBottomLeft: (0, _extends2.default)({}, bottom1, {}, left, (0, _defineProperty2.default)({}, theme.breakpoints.up('sm'), (0, _extends2.default)({
+      right: 'auto'
+    }, bottom3, {}, left3)))
+  };
+};
+
+exports.styles = styles;
+
+var Snackbar = _react.default.forwardRef(function Snackbar(props, ref) {
+  var action = props.action,
+      _props$anchorOrigin = props.anchorOrigin;
+  _props$anchorOrigin = _props$anchorOrigin === void 0 ? {
+    vertical: 'bottom',
+    horizontal: 'center'
+  } : _props$anchorOrigin;
+  var vertical = _props$anchorOrigin.vertical,
+      horizontal = _props$anchorOrigin.horizontal,
+      autoHideDuration = props.autoHideDuration,
+      children = props.children,
+      classes = props.classes,
+      className = props.className,
+      ClickAwayListenerProps = props.ClickAwayListenerProps,
+      ContentProps = props.ContentProps,
+      _props$disableWindowB = props.disableWindowBlurListener,
+      disableWindowBlurListener = _props$disableWindowB === void 0 ? false : _props$disableWindowB,
+      message = props.message,
+      onClose = props.onClose,
+      onEnter = props.onEnter,
+      onEntered = props.onEntered,
+      onEntering = props.onEntering,
+      onExit = props.onExit,
+      onExited = props.onExited,
+      onExiting = props.onExiting,
+      onMouseEnter = props.onMouseEnter,
+      onMouseLeave = props.onMouseLeave,
+      open = props.open,
+      resumeHideDuration = props.resumeHideDuration,
+      _props$TransitionComp = props.TransitionComponent,
+      TransitionComponent = _props$TransitionComp === void 0 ? _Grow.default : _props$TransitionComp,
+      _props$transitionDura = props.transitionDuration,
+      transitionDuration = _props$transitionDura === void 0 ? {
+    enter: _transitions.duration.enteringScreen,
+    exit: _transitions.duration.leavingScreen
+  } : _props$transitionDura,
+      TransitionProps = props.TransitionProps,
+      other = (0, _objectWithoutProperties2.default)(props, ["action", "anchorOrigin", "autoHideDuration", "children", "classes", "className", "ClickAwayListenerProps", "ContentProps", "disableWindowBlurListener", "message", "onClose", "onEnter", "onEntered", "onEntering", "onExit", "onExited", "onExiting", "onMouseEnter", "onMouseLeave", "open", "resumeHideDuration", "TransitionComponent", "transitionDuration", "TransitionProps"]);
+
+  var timerAutoHide = _react.default.useRef();
+
+  var _React$useState = _react.default.useState(true),
+      exited = _React$useState[0],
+      setExited = _React$useState[1]; // Timer that controls delay before snackbar auto hides
+
+
+  var setAutoHideTimer = _react.default.useCallback(function (autoHideDurationParam) {
+    var autoHideDurationBefore = autoHideDurationParam != null ? autoHideDurationParam : autoHideDuration;
+
+    if (!onClose || autoHideDurationBefore == null) {
+      return;
+    }
+
+    clearTimeout(timerAutoHide.current);
+    timerAutoHide.current = setTimeout(function () {
+      var autoHideDurationAfter = autoHideDurationParam != null ? autoHideDurationParam : autoHideDuration;
+
+      if (!onClose || autoHideDurationAfter == null) {
+        return;
+      }
+
+      onClose(null, 'timeout');
+    }, autoHideDurationBefore);
+  }, [autoHideDuration, onClose]);
+
+  _react.default.useEffect(function () {
+    if (open) {
+      setAutoHideTimer();
+    }
+
+    return function () {
+      clearTimeout(timerAutoHide.current);
+    };
+  }, [open, setAutoHideTimer]); // Pause the timer when the user is interacting with the Snackbar
+  // or when the user hide the window.
+
+
+  var handlePause = function handlePause() {
+    clearTimeout(timerAutoHide.current);
+  }; // Restart the timer when the user is no longer interacting with the Snackbar
+  // or when the window is shown back.
+
+
+  var handleResume = _react.default.useCallback(function () {
+    if (autoHideDuration != null) {
+      if (resumeHideDuration != null) {
+        setAutoHideTimer(resumeHideDuration);
+        return;
+      }
+
+      setAutoHideTimer(autoHideDuration * 0.5);
+    }
+  }, [autoHideDuration, resumeHideDuration, setAutoHideTimer]);
+
+  var handleMouseEnter = function handleMouseEnter(event) {
+    if (onMouseEnter) {
+      onMouseEnter(event);
+    }
+
+    handlePause();
+  };
+
+  var handleMouseLeave = function handleMouseLeave(event) {
+    if (onMouseLeave) {
+      onMouseLeave(event);
+    }
+
+    handleResume();
+  };
+
+  var handleClickAway = function handleClickAway(event) {
+    if (onClose) {
+      onClose(event, 'clickaway');
+    }
+  };
+
+  var handleExited = function handleExited() {
+    setExited(true);
+  };
+
+  var handleEnter = function handleEnter() {
+    setExited(false);
+  };
+
+  _react.default.useEffect(function () {
+    if (!disableWindowBlurListener && open) {
+      window.addEventListener('focus', handleResume);
+      window.addEventListener('blur', handlePause);
+      return function () {
+        window.removeEventListener('focus', handleResume);
+        window.removeEventListener('blur', handlePause);
+      };
+    }
+
+    return undefined;
+  }, [disableWindowBlurListener, handleResume, open]); // So we only render active snackbars.
+
+
+  if (!open && exited) {
+    return null;
+  }
+
+  return _react.default.createElement(_ClickAwayListener.default, (0, _extends2.default)({
+    onClickAway: handleClickAway
+  }, ClickAwayListenerProps), _react.default.createElement("div", (0, _extends2.default)({
+    className: (0, _clsx.default)(classes.root, classes["anchorOrigin".concat((0, _helpers.capitalize)(vertical)).concat((0, _helpers.capitalize)(horizontal))], className),
+    onMouseEnter: handleMouseEnter,
+    onMouseLeave: handleMouseLeave,
+    ref: ref
+  }, other), _react.default.createElement(TransitionComponent, (0, _extends2.default)({
+    appear: true,
+    in: open,
+    onEnter: (0, _helpers.createChainedFunction)(handleEnter, onEnter),
+    onEntered: onEntered,
+    onEntering: onEntering,
+    onExit: onExit,
+    onExited: (0, _helpers.createChainedFunction)(handleExited, onExited),
+    onExiting: onExiting,
+    timeout: transitionDuration,
+    direction: vertical === 'top' ? 'down' : 'up'
+  }, TransitionProps), children || _react.default.createElement(_SnackbarContent.default, (0, _extends2.default)({
+    message: message,
+    action: action
+  }, ContentProps)))));
+});
+
+"development" !== "production" ? Snackbar.propTypes = {
+  /**
+   * The action to display.
+   */
+  action: _propTypes.default.node,
+
+  /**
+   * The anchor of the `Snackbar`.
+   */
+  anchorOrigin: _propTypes.default.shape({
+    horizontal: _propTypes.default.oneOf(['left', 'center', 'right']).isRequired,
+    vertical: _propTypes.default.oneOf(['top', 'bottom']).isRequired
+  }),
+
+  /**
+   * The number of milliseconds to wait before automatically calling the
+   * `onClose` function. `onClose` should then set the state of the `open`
+   * prop to hide the Snackbar. This behavior is disabled by default with
+   * the `null` value.
+   */
+  autoHideDuration: _propTypes.default.number,
+
+  /**
+   * Replace the `SnackbarContent` component.
+   */
+  children: _propTypes.default.element,
+
+  /**
+   * Override or extend the styles applied to the component.
+   * See [CSS API](#css) below for more details.
+   */
+  classes: _propTypes.default.object.isRequired,
+
+  /**
+   * @ignore
+   */
+  className: _propTypes.default.string,
+
+  /**
+   * Props applied to the `ClickAwayListener` element.
+   */
+  ClickAwayListenerProps: _propTypes.default.object,
+
+  /**
+   * Props applied to the [`SnackbarContent`](/api/snackbar-content/) element.
+   */
+  ContentProps: _propTypes.default.object,
+
+  /**
+   * If `true`, the `autoHideDuration` timer will expire even if the window is not focused.
+   */
+  disableWindowBlurListener: _propTypes.default.bool,
+
+  /**
+   * When displaying multiple consecutive Snackbars from a parent rendering a single
+   * <Snackbar/>, add the key prop to ensure independent treatment of each message.
+   * e.g. <Snackbar key={message} />, otherwise, the message may update-in-place and
+   * features such as autoHideDuration may be canceled.
+   */
+  key: _propTypes.default.any,
+
+  /**
+   * The message to display.
+   */
+  message: _propTypes.default.node,
+
+  /**
+   * Callback fired when the component requests to be closed.
+   * Typically `onClose` is used to set state in the parent component,
+   * which is used to control the `Snackbar` `open` prop.
+   * The `reason` parameter can optionally be used to control the response to `onClose`,
+   * for example ignoring `clickaway`.
+   *
+   * @param {object} event The event source of the callback.
+   * @param {string} reason Can be:`"timeout"` (`autoHideDuration` expired) or: `"clickaway"`.
+   */
+  onClose: _propTypes.default.func,
+
+  /**
+   * Callback fired before the transition is entering.
+   */
+  onEnter: _propTypes.default.func,
+
+  /**
+   * Callback fired when the transition has entered.
+   */
+  onEntered: _propTypes.default.func,
+
+  /**
+   * Callback fired when the transition is entering.
+   */
+  onEntering: _propTypes.default.func,
+
+  /**
+   * Callback fired before the transition is exiting.
+   */
+  onExit: _propTypes.default.func,
+
+  /**
+   * Callback fired when the transition has exited.
+   */
+  onExited: _propTypes.default.func,
+
+  /**
+   * Callback fired when the transition is exiting.
+   */
+  onExiting: _propTypes.default.func,
+
+  /**
+   * @ignore
+   */
+  onMouseEnter: _propTypes.default.func,
+
+  /**
+   * @ignore
+   */
+  onMouseLeave: _propTypes.default.func,
+
+  /**
+   * If true, `Snackbar` is open.
+   */
+  open: _propTypes.default.bool,
+
+  /**
+   * The number of milliseconds to wait before dismissing after user interaction.
+   * If `autoHideDuration` prop isn't specified, it does nothing.
+   * If `autoHideDuration` prop is specified but `resumeHideDuration` isn't,
+   * we default to `autoHideDuration / 2` ms.
+   */
+  resumeHideDuration: _propTypes.default.number,
+
+  /**
+   * The component used for the transition.
+   */
+  TransitionComponent: _propTypes.default.elementType,
+
+  /**
+   * The duration for the transition, in milliseconds.
+   * You may specify a single timeout for all transitions, or individually with an object.
+   */
+  transitionDuration: _propTypes.default.oneOfType([_propTypes.default.number, _propTypes.default.shape({
+    enter: _propTypes.default.number,
+    exit: _propTypes.default.number
+  })]),
+
+  /**
+   * Props applied to the `Transition` element.
+   */
+  TransitionProps: _propTypes.default.object
+} : void 0;
+
+var _default = (0, _withStyles.default)(styles, {
+  flip: false,
+  name: 'MuiSnackbar'
+})(Snackbar);
+
+exports.default = _default;
+},{"@babel/runtime/helpers/esm/objectWithoutProperties":"../node_modules/@babel/runtime/helpers/esm/objectWithoutProperties.js","@babel/runtime/helpers/esm/defineProperty":"../node_modules/@babel/runtime/helpers/esm/defineProperty.js","@babel/runtime/helpers/esm/extends":"../node_modules/@babel/runtime/helpers/esm/extends.js","react":"../node_modules/react/index.js","prop-types":"../node_modules/prop-types/index.js","clsx":"../node_modules/clsx/dist/clsx.m.js","../styles/withStyles":"../node_modules/@material-ui/core/esm/styles/withStyles.js","../styles/transitions":"../node_modules/@material-ui/core/esm/styles/transitions.js","../ClickAwayListener":"../node_modules/@material-ui/core/esm/ClickAwayListener/index.js","../utils/helpers":"../node_modules/@material-ui/core/esm/utils/helpers.js","../Grow":"../node_modules/@material-ui/core/esm/Grow/index.js","../SnackbarContent":"../node_modules/@material-ui/core/esm/SnackbarContent/index.js"}],"../node_modules/@material-ui/core/esm/Snackbar/index.js":[function(require,module,exports) {
+"use strict";
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+Object.defineProperty(exports, "default", {
+  enumerable: true,
+  get: function () {
+    return _Snackbar.default;
+  }
+});
+
+var _Snackbar = _interopRequireDefault(require("./Snackbar"));
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+},{"./Snackbar":"../node_modules/@material-ui/core/esm/Snackbar/Snackbar.js"}],"../node_modules/@material-ui/core/esm/IconButton/IconButton.js":[function(require,module,exports) {
+"use strict";
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.default = exports.styles = void 0;
+
+var _extends2 = _interopRequireDefault(require("@babel/runtime/helpers/esm/extends"));
+
+var _objectWithoutProperties2 = _interopRequireDefault(require("@babel/runtime/helpers/esm/objectWithoutProperties"));
+
+var _react = _interopRequireDefault(require("react"));
+
+var _propTypes = _interopRequireDefault(require("prop-types"));
+
+var _clsx = _interopRequireDefault(require("clsx"));
+
+var _utils = require("@material-ui/utils");
+
+var _withStyles = _interopRequireDefault(require("../styles/withStyles"));
+
+var _colorManipulator = require("../styles/colorManipulator");
+
+var _ButtonBase = _interopRequireDefault(require("../ButtonBase"));
+
+var _helpers = require("../utils/helpers");
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+var styles = function styles(theme) {
+  return {
+    /* Styles applied to the root element. */
+    root: {
+      textAlign: 'center',
+      flex: '0 0 auto',
+      fontSize: theme.typography.pxToRem(24),
+      padding: 12,
+      borderRadius: '50%',
+      overflow: 'visible',
+      // Explicitly set the default value to solve a bug on IE 11.
+      color: theme.palette.action.active,
+      transition: theme.transitions.create('background-color', {
+        duration: theme.transitions.duration.shortest
+      }),
+      '&:hover': {
+        backgroundColor: (0, _colorManipulator.fade)(theme.palette.action.active, theme.palette.action.hoverOpacity),
+        // Reset on touch devices, it doesn't add specificity
+        '@media (hover: none)': {
+          backgroundColor: 'transparent'
+        }
+      },
+      '&$disabled': {
+        backgroundColor: 'transparent',
+        color: theme.palette.action.disabled
+      }
+    },
+
+    /* Styles applied to the root element if `edge="start"`. */
+    edgeStart: {
+      marginLeft: -12,
+      '$sizeSmall&': {
+        marginLeft: -3
+      }
+    },
+
+    /* Styles applied to the root element if `edge="end"`. */
+    edgeEnd: {
+      marginRight: -12,
+      '$sizeSmall&': {
+        marginRight: -3
+      }
+    },
+
+    /* Styles applied to the root element if `color="inherit"`. */
+    colorInherit: {
+      color: 'inherit'
+    },
+
+    /* Styles applied to the root element if `color="primary"`. */
+    colorPrimary: {
+      color: theme.palette.primary.main,
+      '&:hover': {
+        backgroundColor: (0, _colorManipulator.fade)(theme.palette.primary.main, theme.palette.action.hoverOpacity),
+        // Reset on touch devices, it doesn't add specificity
+        '@media (hover: none)': {
+          backgroundColor: 'transparent'
+        }
+      }
+    },
+
+    /* Styles applied to the root element if `color="secondary"`. */
+    colorSecondary: {
+      color: theme.palette.secondary.main,
+      '&:hover': {
+        backgroundColor: (0, _colorManipulator.fade)(theme.palette.secondary.main, theme.palette.action.hoverOpacity),
+        // Reset on touch devices, it doesn't add specificity
+        '@media (hover: none)': {
+          backgroundColor: 'transparent'
+        }
+      }
+    },
+
+    /* Pseudo-class applied to the root element if `disabled={true}`. */
+    disabled: {},
+
+    /* Styles applied to the root element if `size="small"`. */
+    sizeSmall: {
+      padding: 3,
+      fontSize: theme.typography.pxToRem(18)
+    },
+
+    /* Styles applied to the children container element. */
+    label: {
+      width: '100%',
+      display: 'flex',
+      alignItems: 'inherit',
+      justifyContent: 'inherit'
+    }
+  };
+};
+/**
+ * Refer to the [Icons](/components/icons/) section of the documentation
+ * regarding the available icon options.
+ */
+
+
+exports.styles = styles;
+
+var IconButton = _react.default.forwardRef(function IconButton(props, ref) {
+  var _props$edge = props.edge,
+      edge = _props$edge === void 0 ? false : _props$edge,
+      children = props.children,
+      classes = props.classes,
+      className = props.className,
+      _props$color = props.color,
+      color = _props$color === void 0 ? 'default' : _props$color,
+      _props$disabled = props.disabled,
+      disabled = _props$disabled === void 0 ? false : _props$disabled,
+      _props$disableFocusRi = props.disableFocusRipple,
+      disableFocusRipple = _props$disableFocusRi === void 0 ? false : _props$disableFocusRi,
+      _props$size = props.size,
+      size = _props$size === void 0 ? 'medium' : _props$size,
+      other = (0, _objectWithoutProperties2.default)(props, ["edge", "children", "classes", "className", "color", "disabled", "disableFocusRipple", "size"]);
+  return _react.default.createElement(_ButtonBase.default, (0, _extends2.default)({
+    className: (0, _clsx.default)(classes.root, className, color !== 'default' && classes["color".concat((0, _helpers.capitalize)(color))], disabled && classes.disabled, {
+      small: classes["size".concat((0, _helpers.capitalize)(size))]
+    }[size], {
+      start: classes.edgeStart,
+      end: classes.edgeEnd
+    }[edge]),
+    centerRipple: true,
+    focusRipple: !disableFocusRipple,
+    disabled: disabled,
+    ref: ref
+  }, other), _react.default.createElement("span", {
+    className: classes.label
+  }, children));
+});
+
+"development" !== "production" ? IconButton.propTypes = {
+  /**
+   * The icon element.
+   */
+  children: (0, _utils.chainPropTypes)(_propTypes.default.node, function (props) {
+    var found = _react.default.Children.toArray(props.children).some(function (child) {
+      return _react.default.isValidElement(child) && child.props.onClick;
+    });
+
+    if (found) {
+      return new Error(['Material-UI: you are providing an onClick event listener ' + 'to a child of a button element.', 'Firefox will never trigger the event.', 'You should move the onClick listener to the parent button element.', 'https://github.com/mui-org/material-ui/issues/13957'].join('\n'));
+    }
+
+    return null;
+  }),
+
+  /**
+   * Override or extend the styles applied to the component.
+   * See [CSS API](#css) below for more details.
+   */
+  classes: _propTypes.default.object.isRequired,
+
+  /**
+   * @ignore
+   */
+  className: _propTypes.default.string,
+
+  /**
+   * The color of the component. It supports those theme colors that make sense for this component.
+   */
+  color: _propTypes.default.oneOf(['default', 'inherit', 'primary', 'secondary']),
+
+  /**
+   * If `true`, the button will be disabled.
+   */
+  disabled: _propTypes.default.bool,
+
+  /**
+   * If `true`, the  keyboard focus ripple will be disabled.
+   * `disableRipple` must also be true.
+   */
+  disableFocusRipple: _propTypes.default.bool,
+
+  /**
+   * If `true`, the ripple effect will be disabled.
+   */
+  disableRipple: _propTypes.default.bool,
+
+  /**
+   * If given, uses a negative margin to counteract the padding on one
+   * side (this is often helpful for aligning the left or right
+   * side of the icon with content above or below, without ruining the border
+   * size and shape).
+   */
+  edge: _propTypes.default.oneOf(['start', 'end', false]),
+
+  /**
+   * The size of the button.
+   * `small` is equivalent to the dense button styling.
+   */
+  size: _propTypes.default.oneOf(['small', 'medium'])
+} : void 0;
+
+var _default = (0, _withStyles.default)(styles, {
+  name: 'MuiIconButton'
+})(IconButton);
+
+exports.default = _default;
+},{"@babel/runtime/helpers/esm/extends":"../node_modules/@babel/runtime/helpers/esm/extends.js","@babel/runtime/helpers/esm/objectWithoutProperties":"../node_modules/@babel/runtime/helpers/esm/objectWithoutProperties.js","react":"../node_modules/react/index.js","prop-types":"../node_modules/prop-types/index.js","clsx":"../node_modules/clsx/dist/clsx.m.js","@material-ui/utils":"../node_modules/@material-ui/utils/esm/index.js","../styles/withStyles":"../node_modules/@material-ui/core/esm/styles/withStyles.js","../styles/colorManipulator":"../node_modules/@material-ui/core/esm/styles/colorManipulator.js","../ButtonBase":"../node_modules/@material-ui/core/esm/ButtonBase/index.js","../utils/helpers":"../node_modules/@material-ui/core/esm/utils/helpers.js"}],"../node_modules/@material-ui/core/esm/IconButton/index.js":[function(require,module,exports) {
+"use strict";
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+Object.defineProperty(exports, "default", {
+  enumerable: true,
+  get: function () {
+    return _IconButton.default;
+  }
+});
+
+var _IconButton = _interopRequireDefault(require("./IconButton"));
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+},{"./IconButton":"../node_modules/@material-ui/core/esm/IconButton/IconButton.js"}],"../node_modules/@babel/runtime/helpers/interopRequireDefault.js":[function(require,module,exports) {
+function _interopRequireDefault(obj) {
+  return obj && obj.__esModule ? obj : {
+    "default": obj
+  };
+}
+
+module.exports = _interopRequireDefault;
+},{}],"../node_modules/@babel/runtime/helpers/extends.js":[function(require,module,exports) {
+function _extends() {
+  module.exports = _extends = Object.assign || function (target) {
+    for (var i = 1; i < arguments.length; i++) {
+      var source = arguments[i];
+
+      for (var key in source) {
+        if (Object.prototype.hasOwnProperty.call(source, key)) {
+          target[key] = source[key];
+        }
+      }
+    }
+
+    return target;
+  };
+
+  return _extends.apply(this, arguments);
+}
+
+module.exports = _extends;
+},{}],"../node_modules/@material-ui/icons/utils/createSvgIcon.js":[function(require,module,exports) {
+"use strict";
+
+var _interopRequireDefault = require("@babel/runtime/helpers/interopRequireDefault");
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.default = createSvgIcon;
+
+var _extends2 = _interopRequireDefault(require("@babel/runtime/helpers/extends"));
+
+var _react = _interopRequireDefault(require("react"));
+
+var _SvgIcon = _interopRequireDefault(require("@material-ui/core/SvgIcon"));
+
+function createSvgIcon(path, displayName) {
+  var Component = _react.default.memo(_react.default.forwardRef(function (props, ref) {
+    return _react.default.createElement(_SvgIcon.default, (0, _extends2.default)({
+      ref: ref
+    }, props), path);
+  }));
+
+  if ("development" !== 'production') {
+    Component.displayName = "".concat(displayName, "Icon");
+  }
+
+  Component.muiName = _SvgIcon.default.muiName;
+  return Component;
+}
+},{"@babel/runtime/helpers/interopRequireDefault":"../node_modules/@babel/runtime/helpers/interopRequireDefault.js","@babel/runtime/helpers/extends":"../node_modules/@babel/runtime/helpers/extends.js","react":"../node_modules/react/index.js","@material-ui/core/SvgIcon":"../node_modules/@material-ui/core/esm/SvgIcon/index.js"}],"../node_modules/@material-ui/icons/Close.js":[function(require,module,exports) {
+"use strict";
+
+var _interopRequireDefault = require("@babel/runtime/helpers/interopRequireDefault");
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.default = void 0;
+
+var _react = _interopRequireDefault(require("react"));
+
+var _createSvgIcon = _interopRequireDefault(require("./utils/createSvgIcon"));
+
+var _default = (0, _createSvgIcon.default)(_react.default.createElement("path", {
+  d: "M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"
+}), 'Close');
+
+exports.default = _default;
+},{"@babel/runtime/helpers/interopRequireDefault":"../node_modules/@babel/runtime/helpers/interopRequireDefault.js","react":"../node_modules/react/index.js","./utils/createSvgIcon":"../node_modules/@material-ui/icons/utils/createSvgIcon.js"}],"../node_modules/@material-ui/core/esm/Card/Card.js":[function(require,module,exports) {
+"use strict";
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.default = exports.styles = void 0;
+
+var _extends2 = _interopRequireDefault(require("@babel/runtime/helpers/esm/extends"));
+
+var _objectWithoutProperties2 = _interopRequireDefault(require("@babel/runtime/helpers/esm/objectWithoutProperties"));
+
+var _react = _interopRequireDefault(require("react"));
+
+var _propTypes = _interopRequireDefault(require("prop-types"));
+
+var _clsx = _interopRequireDefault(require("clsx"));
+
+var _Paper = _interopRequireDefault(require("../Paper"));
+
+var _withStyles = _interopRequireDefault(require("../styles/withStyles"));
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+var styles = {
+  /* Styles applied to the root element. */
+  root: {
+    overflow: 'hidden'
+  }
+};
+exports.styles = styles;
+
+var Card = _react.default.forwardRef(function Card(props, ref) {
+  var classes = props.classes,
+      className = props.className,
+      _props$raised = props.raised,
+      raised = _props$raised === void 0 ? false : _props$raised,
+      other = (0, _objectWithoutProperties2.default)(props, ["classes", "className", "raised"]);
+  return _react.default.createElement(_Paper.default, (0, _extends2.default)({
+    className: (0, _clsx.default)(classes.root, className),
+    elevation: raised ? 8 : 1,
+    ref: ref
+  }, other));
+});
+
+"development" !== "production" ? Card.propTypes = {
+  /**
+   * Override or extend the styles applied to the component.
+   * See [CSS API](#css) below for more details.
+   */
+  classes: _propTypes.default.object.isRequired,
+
+  /**
+   * @ignore
+   */
+  className: _propTypes.default.string,
+
+  /**
+   * If `true`, the card will use raised styling.
+   */
+  raised: _propTypes.default.bool
+} : void 0;
+
+var _default = (0, _withStyles.default)(styles, {
+  name: 'MuiCard'
+})(Card);
+
+exports.default = _default;
+},{"@babel/runtime/helpers/esm/extends":"../node_modules/@babel/runtime/helpers/esm/extends.js","@babel/runtime/helpers/esm/objectWithoutProperties":"../node_modules/@babel/runtime/helpers/esm/objectWithoutProperties.js","react":"../node_modules/react/index.js","prop-types":"../node_modules/prop-types/index.js","clsx":"../node_modules/clsx/dist/clsx.m.js","../Paper":"../node_modules/@material-ui/core/esm/Paper/index.js","../styles/withStyles":"../node_modules/@material-ui/core/esm/styles/withStyles.js"}],"../node_modules/@material-ui/core/esm/Card/index.js":[function(require,module,exports) {
+"use strict";
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+Object.defineProperty(exports, "default", {
+  enumerable: true,
+  get: function () {
+    return _Card.default;
+  }
+});
+
+var _Card = _interopRequireDefault(require("./Card"));
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+},{"./Card":"../node_modules/@material-ui/core/esm/Card/Card.js"}],"../node_modules/@material-ui/core/esm/CardContent/CardContent.js":[function(require,module,exports) {
+"use strict";
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.default = exports.styles = void 0;
+
+var _extends2 = _interopRequireDefault(require("@babel/runtime/helpers/esm/extends"));
+
+var _objectWithoutProperties2 = _interopRequireDefault(require("@babel/runtime/helpers/esm/objectWithoutProperties"));
+
+var _react = _interopRequireDefault(require("react"));
+
+var _propTypes = _interopRequireDefault(require("prop-types"));
+
+var _clsx = _interopRequireDefault(require("clsx"));
+
+var _withStyles = _interopRequireDefault(require("../styles/withStyles"));
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+var styles = {
+  /* Styles applied to the root element. */
+  root: {
+    padding: 16,
+    '&:last-child': {
+      paddingBottom: 24
+    }
+  }
+};
+exports.styles = styles;
+
+var CardContent = _react.default.forwardRef(function CardContent(props, ref) {
+  var classes = props.classes,
+      className = props.className,
+      _props$component = props.component,
+      Component = _props$component === void 0 ? 'div' : _props$component,
+      other = (0, _objectWithoutProperties2.default)(props, ["classes", "className", "component"]);
+  return _react.default.createElement(Component, (0, _extends2.default)({
+    className: (0, _clsx.default)(classes.root, className),
+    ref: ref
+  }, other));
+});
+
+"development" !== "production" ? CardContent.propTypes = {
+  /**
+   * Override or extend the styles applied to the component.
+   * See [CSS API](#css) below for more details.
+   */
+  classes: _propTypes.default.object.isRequired,
+
+  /**
+   * @ignore
+   */
+  className: _propTypes.default.string,
+
+  /**
+   * The component used for the root node.
+   * Either a string to use a DOM element or a component.
+   */
+  component: _propTypes.default.elementType
+} : void 0;
+
+var _default = (0, _withStyles.default)(styles, {
+  name: 'MuiCardContent'
+})(CardContent);
+
+exports.default = _default;
+},{"@babel/runtime/helpers/esm/extends":"../node_modules/@babel/runtime/helpers/esm/extends.js","@babel/runtime/helpers/esm/objectWithoutProperties":"../node_modules/@babel/runtime/helpers/esm/objectWithoutProperties.js","react":"../node_modules/react/index.js","prop-types":"../node_modules/prop-types/index.js","clsx":"../node_modules/clsx/dist/clsx.m.js","../styles/withStyles":"../node_modules/@material-ui/core/esm/styles/withStyles.js"}],"../node_modules/@material-ui/core/esm/CardContent/index.js":[function(require,module,exports) {
+"use strict";
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+Object.defineProperty(exports, "default", {
+  enumerable: true,
+  get: function () {
+    return _CardContent.default;
+  }
+});
+
+var _CardContent = _interopRequireDefault(require("./CardContent"));
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+},{"./CardContent":"../node_modules/@material-ui/core/esm/CardContent/CardContent.js"}],"components/Summary.tsx":[function(require,module,exports) {
+"use strict";
+
+var __importStar = this && this.__importStar || function (mod) {
+  if (mod && mod.__esModule) return mod;
+  var result = {};
+  if (mod != null) for (var k in mod) {
+    if (Object.hasOwnProperty.call(mod, k)) result[k] = mod[k];
+  }
+  result["default"] = mod;
+  return result;
+};
+
+var __importDefault = this && this.__importDefault || function (mod) {
+  return mod && mod.__esModule ? mod : {
+    "default": mod
+  };
+};
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+
+var React = __importStar(require("react"));
+
+var Typography_1 = __importDefault(require("@material-ui/core/Typography"));
+
+var Card_1 = __importDefault(require("@material-ui/core/Card"));
+
+var CardContent_1 = __importDefault(require("@material-ui/core/CardContent"));
+
+var prop_types_1 = __importDefault(require("prop-types"));
+
+var formatter = new Intl.NumberFormat('ja', {
+  useGrouping: true,
+  minimumFractionDigits: 0,
+  maximumFractionDigits: 0
+});
+
+exports.SummaryCard = function (props) {
+  var summary = props.summary;
+  return React.createElement(Card_1.default, null, React.createElement(CardContent_1.default, null, React.createElement(Typography_1.default, {
+    variant: "h6"
+  }, "Activity Summary"), React.createElement(Typography_1.default, {
+    variant: "subtitle1",
+    color: "textSecondary"
+  }, "Latest"), React.createElement(Typography_1.default, {
+    variant: "body1"
+  }, formatter.format(summary.latestDistance), " m"), React.createElement(Typography_1.default, {
+    variant: "body1"
+  }, formatter.format(summary.latestMovingTime), " min"), React.createElement(Typography_1.default, {
+    variant: "body1"
+  }, formatter.format(summary.latestCalories), " kcal"), React.createElement(Typography_1.default, {
+    variant: "subtitle1",
+    color: "textSecondary"
+  }, "Weekly (", summary.weeklyCount, ")"), React.createElement(Typography_1.default, {
+    variant: "body1"
+  }, formatter.format(summary.weeklyDistance), " m"), React.createElement(Typography_1.default, {
+    variant: "body1"
+  }, formatter.format(summary.weeklyMovingTime), " min"), React.createElement(Typography_1.default, {
+    variant: "body1"
+  }, formatter.format(summary.weeklyCalories), " kcal"), React.createElement(Typography_1.default, {
+    variant: "subtitle1",
+    color: "textSecondary"
+  }, "Monthly (", summary.monthlyCount, ")"), React.createElement(Typography_1.default, {
+    variant: "body1"
+  }, formatter.format(summary.monthlyDistance), " m"), React.createElement(Typography_1.default, {
+    variant: "body1"
+  }, formatter.format(summary.monthlyMovingTime), " min"), React.createElement(Typography_1.default, {
+    variant: "body1"
+  }, formatter.format(summary.monthlyCalories), " kcal")));
+};
+
+exports.SummaryCard.propTypes = {
+  summary: prop_types_1.default.shape({
+    id: prop_types_1.default.number.isRequired,
+    athleteId: prop_types_1.default.number.isRequired,
+    latestDistance: prop_types_1.default.number.isRequired,
+    latestMovingTime: prop_types_1.default.number.isRequired,
+    latestTotalElevationGain: prop_types_1.default.number.isRequired,
+    latestCalories: prop_types_1.default.number.isRequired,
+    weekBaseDate: prop_types_1.default.string.isRequired,
+    weeklyCount: prop_types_1.default.number.isRequired,
+    weeklyDistance: prop_types_1.default.number.isRequired,
+    weeklyMovingTime: prop_types_1.default.number.isRequired,
+    weeklyTotalElevationGain: prop_types_1.default.number.isRequired,
+    weeklyCalories: prop_types_1.default.number.isRequired,
+    monthBaseDate: prop_types_1.default.string.isRequired,
+    monthlyCount: prop_types_1.default.number.isRequired,
+    monthlyDistance: prop_types_1.default.number.isRequired,
+    monthlyMovingTime: prop_types_1.default.number.isRequired,
+    monthlyTotalElevationGain: prop_types_1.default.number.isRequired,
+    monthlyCalories: prop_types_1.default.number.isRequired
+  }).isRequired
+};
+},{"react":"../node_modules/react/index.js","@material-ui/core/Typography":"../node_modules/@material-ui/core/esm/Typography/index.js","@material-ui/core/Card":"../node_modules/@material-ui/core/esm/Card/index.js","@material-ui/core/CardContent":"../node_modules/@material-ui/core/esm/CardContent/index.js","prop-types":"../node_modules/prop-types/index.js"}],"index.tsx":[function(require,module,exports) {
 "use strict";
 
 function _slicedToArray(arr, i) { return _arrayWithHoles(arr) || _iterableToArrayLimit(arr, i) || _nonIterableRest(); }
@@ -54289,6 +55732,18 @@ var TextField_1 = __importDefault(require("@material-ui/core/TextField"));
 
 var Typography_1 = __importDefault(require("@material-ui/core/Typography"));
 
+var Snackbar_1 = __importDefault(require("@material-ui/core/Snackbar"));
+
+var IconButton_1 = __importDefault(require("@material-ui/core/IconButton"));
+
+var Close_1 = __importDefault(require("@material-ui/icons/Close"));
+
+var Card_1 = __importDefault(require("@material-ui/core/Card"));
+
+var CardContent_1 = __importDefault(require("@material-ui/core/CardContent"));
+
+var Summary_1 = require("./components/Summary");
+
 var parsed = query_string_1.default.parse(location.search);
 var token = parsed.token || localStorage.getItem('token') || '';
 axios_1.default.defaults.headers.common['Authorization'] = token;
@@ -54304,21 +55759,34 @@ var App = function App() {
       user = _React$useState4[0],
       setUser = _React$useState4[1];
 
-  var _React$useState5 = React.useState(''),
+  var _React$useState5 = React.useState(null),
       _React$useState6 = _slicedToArray(_React$useState5, 2),
-      stravaAuth = _React$useState6[0],
-      setStravaAuth = _React$useState6[1];
+      summary = _React$useState6[0],
+      setSummary = _React$useState6[1];
 
   var _React$useState7 = React.useState(''),
       _React$useState8 = _slicedToArray(_React$useState7, 2),
-      draftKey = _React$useState8[0],
-      setDraftKey = _React$useState8[1];
+      stravaAuth = _React$useState8[0],
+      setStravaAuth = _React$useState8[1];
 
   var _React$useState9 = React.useState(''),
       _React$useState10 = _slicedToArray(_React$useState9, 2),
-      draftMessage = _React$useState10[0],
-      setDraftMessage = _React$useState10[1];
+      draftKey = _React$useState10[0],
+      setDraftKey = _React$useState10[1];
 
+  var _React$useState11 = React.useState(''),
+      _React$useState12 = _slicedToArray(_React$useState11, 2),
+      draftMessage = _React$useState12[0],
+      setDraftMessage = _React$useState12[1];
+
+  var _React$useState13 = React.useState(false),
+      _React$useState14 = _slicedToArray(_React$useState13, 2),
+      snack = _React$useState14[0],
+      setSnack = _React$useState14[1];
+
+  var onCloseSnack = React.useCallback(function () {
+    setSnack(false);
+  }, []);
   var onInputDraftKey = React.useCallback(function (e) {
     setDraftKey(e.currentTarget.value);
   }, []);
@@ -54332,6 +55800,7 @@ var App = function App() {
       iftttMessage: draftMessage
     }).then(function (res) {
       setUser(res.data);
+      setSnack(true);
     });
   }, [draftKey, draftMessage]);
   React.useEffect(function () {
@@ -54343,6 +55812,11 @@ var App = function App() {
       setLoading(false);
     }).catch(function () {
       setLoading(false);
+    });
+  }, []);
+  React.useEffect(function () {
+    axios_1.default.get('/api/current_user/summary').then(function (res) {
+      setSummary(res.data);
     });
   }, []);
   React.useEffect(function () {
@@ -54367,12 +55841,19 @@ var App = function App() {
     }, React.createElement(Typography_1.default, null, "Strava Username"), React.createElement("p", null, user.username)), React.createElement(Grid_1.default, {
       item: true,
       xs: 12
-    }, React.createElement(Typography_1.default, null, "IFTTT Key"), React.createElement(TextField_1.default, {
+    }, React.createElement(TextField_1.default, {
+      label: "IFTTT Key",
       variant: "outlined",
+      margin: "normal",
       value: draftKey,
       onChange: onInputDraftKey
-    }), React.createElement(Typography_1.default, null, "IFTTT Message"), React.createElement(TextField_1.default, {
+    })), React.createElement(Grid_1.default, {
+      item: true,
+      xs: 12
+    }, React.createElement(TextField_1.default, {
+      label: "IFTTT Message",
       variant: "outlined",
+      margin: "normal",
       value: draftMessage,
       onChange: onInputDraftMessage
     })), React.createElement(Grid_1.default, {
@@ -54381,7 +55862,25 @@ var App = function App() {
       type: "submit",
       variant: "contained",
       color: "primary"
-    }, "Submit"))));
+    }, "Submit"))), React.createElement(Snackbar_1.default, {
+      anchorOrigin: {
+        vertical: 'bottom',
+        horizontal: 'left'
+      },
+      open: snack,
+      autoHideDuration: 6000,
+      onClose: onCloseSnack,
+      ContentProps: {
+        'aria-describedby': 'message-id'
+      },
+      message: React.createElement("span", null, "Saved"),
+      action: [React.createElement(IconButton_1.default, {
+        key: "close",
+        "aria-label": "close",
+        color: "inherit",
+        onClick: onCloseSnack
+      }, React.createElement(Close_1.default, null))]
+    }));
     return React.createElement("div", null, React.createElement(Link_1.default, {
       href: stravaAuth
     }, React.createElement("p", null, "Login by Strava"), React.createElement("img", {
@@ -54391,12 +55890,25 @@ var App = function App() {
         height: 'auto'
       }
     })));
-  }, [draftKey, draftMessage, onInputDraftKey, onInputDraftMessage, onSubmit, stravaAuth, user]);
-  return React.createElement("div", null, React.createElement("div", null, loading ? 'loading...' : userBlock));
+  }, [draftKey, draftMessage, onCloseSnack, onInputDraftKey, onInputDraftMessage, onSubmit, snack, stravaAuth, user]);
+  var summaryBlock = React.useMemo(function () {
+    if (summary) return React.createElement(Summary_1.SummaryCard, {
+      summary: summary
+    });
+    return React.createElement(Card_1.default, null, React.createElement(CardContent_1.default, null, React.createElement(Typography_1.default, {
+      variant: "h5",
+      component: "h2"
+    }, "No Summary")));
+  }, [summary]);
+  var mainBlock = React.useMemo(function () {
+    if (!loading) return React.createElement("div", null, React.createElement("div", null, userBlock), React.createElement("div", null, summaryBlock));
+    return React.createElement("div", null, "loading...");
+  }, [loading, summaryBlock, userBlock]);
+  return React.createElement("div", null, mainBlock);
 };
 
 react_dom_1.render(React.createElement(App, null), document.getElementById('root'));
-},{"regenerator-runtime/runtime":"../node_modules/regenerator-runtime/runtime.js","react":"../node_modules/react/index.js","react-dom":"../node_modules/react-dom/index.js","@material-ui/core/Link":"../node_modules/@material-ui/core/esm/Link/index.js","axios":"../node_modules/axios/index.js","query-string":"../node_modules/query-string/index.js","@material-ui/core/Grid":"../node_modules/@material-ui/core/esm/Grid/index.js","@material-ui/core/Button":"../node_modules/@material-ui/core/esm/Button/index.js","@material-ui/core/TextField":"../node_modules/@material-ui/core/esm/TextField/index.js","@material-ui/core/Typography":"../node_modules/@material-ui/core/esm/Typography/index.js"}],"../node_modules/parcel-bundler/src/builtins/hmr-runtime.js":[function(require,module,exports) {
+},{"regenerator-runtime/runtime":"../node_modules/regenerator-runtime/runtime.js","react":"../node_modules/react/index.js","react-dom":"../node_modules/react-dom/index.js","@material-ui/core/Link":"../node_modules/@material-ui/core/esm/Link/index.js","axios":"../node_modules/axios/index.js","query-string":"../node_modules/query-string/index.js","@material-ui/core/Grid":"../node_modules/@material-ui/core/esm/Grid/index.js","@material-ui/core/Button":"../node_modules/@material-ui/core/esm/Button/index.js","@material-ui/core/TextField":"../node_modules/@material-ui/core/esm/TextField/index.js","@material-ui/core/Typography":"../node_modules/@material-ui/core/esm/Typography/index.js","@material-ui/core/Snackbar":"../node_modules/@material-ui/core/esm/Snackbar/index.js","@material-ui/core/IconButton":"../node_modules/@material-ui/core/esm/IconButton/index.js","@material-ui/icons/Close":"../node_modules/@material-ui/icons/Close.js","@material-ui/core/Card":"../node_modules/@material-ui/core/esm/Card/index.js","@material-ui/core/CardContent":"../node_modules/@material-ui/core/esm/CardContent/index.js","./components/Summary":"components/Summary.tsx"}],"../node_modules/parcel-bundler/src/builtins/hmr-runtime.js":[function(require,module,exports) {
 var global = arguments[3];
 var OVERLAY_ID = '__parcel__error__overlay__';
 var OldModule = module.bundle.Module;
@@ -54424,7 +55936,7 @@ var parent = module.bundle.parent;
 if ((!parent || !parent.isParcelRequire) && typeof WebSocket !== 'undefined') {
   var hostname = "" || location.hostname;
   var protocol = location.protocol === 'https:' ? 'wss' : 'ws';
-  var ws = new WebSocket(protocol + '://' + hostname + ':' + "63670" + '/');
+  var ws = new WebSocket(protocol + '://' + hostname + ':' + "64316" + '/');
 
   ws.onmessage = function (event) {
     checkedAssets = {};

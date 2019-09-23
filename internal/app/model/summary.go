@@ -15,24 +15,24 @@ import (
 
 // Summary model
 type Summary struct {
-	ID                        int64
-	AthleteID                 int64
-	LatestDistance            float64
-	LatestMovingTime          int64
-	LatestTotalElevationGain  float64
-	LatestCalories            float64
-	MonthBaseDate             time.Time
-	MonthlyCount              int64
-	MonthlyDistance           float64
-	MonthlyMovingTime         int64
-	MonthlyTotalElevationGain float64
-	MonthlyCalories           float64
-	WeekBaseDate              time.Time
-	WeeklyCount               int64
-	WeeklyDistance            float64
-	WeeklyMovingTime          int64
-	WeeklyTotalElevationGain  float64
-	WeeklyCalories            float64
+	ID                        int64     `json:"id"`
+	AthleteID                 int64     `json:"athleteId"`
+	LatestDistance            float64   `json:"latestDistance"`
+	LatestMovingTime          int64     `json:"latestMovingTime"`
+	LatestTotalElevationGain  float64   `json:"latestTotalElevationGain"`
+	LatestCalories            float64   `json:"latestCalories"`
+	MonthBaseDate             time.Time `json:"monthBaseDate"`
+	MonthlyCount              int64     `json:"monthlyCount"`
+	MonthlyDistance           float64   `json:"monthlyDistance"`
+	MonthlyMovingTime         int64     `json:"monthlyMovingTime"`
+	MonthlyTotalElevationGain float64   `json:"monthlyTotalElevationGain"`
+	MonthlyCalories           float64   `json:"monthlyCalories"`
+	WeekBaseDate              time.Time `json:"weekBaseDate"`
+	WeeklyCount               int64     `json:"weeklyCount"`
+	WeeklyDistance            float64   `json:"weeklyDistance"`
+	WeeklyMovingTime          int64     `json:"weeklyMovingTime"`
+	WeeklyTotalElevationGain  float64   `json:"weeklyTotalElevationGain"`
+	WeeklyCalories            float64   `json:"weeklyCalories"`
 }
 
 // FirstOrInit Summary by AthleteID
