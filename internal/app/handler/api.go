@@ -2,6 +2,7 @@ package handler
 
 import (
 	"net/url"
+	"time"
 
 	"strvucks-go/internal/app/model"
 
@@ -11,12 +12,13 @@ import (
 
 // API handles API
 type API struct {
-	AuthClient AuthClient
+	WebhookClient WebhookClient
+	AuthClient    AuthClient
 }
 
 // NewAPI returns implemented API
 func NewAPI() *API {
-	return &API{&AuthClientImpl{}}
+	return &API{&WebhookClientImpl{}, &AuthClientImpl{}}
 }
 
 // AuthClient handles auth
@@ -65,6 +67,17 @@ func (w *API) getUser(c *gin.Context) (*model.User, bool) {
 	return user, true
 }
 
+func (w *API) getPermission(c *gin.Context, user *model.User) (*model.Permission, bool) {
+	permission := &model.Permission{}
+	if err := model.DB().First(permission, model.Permission{AthleteID: user.AthleteID}).Error; err != nil {
+		log.Error("Failure get permission", err)
+		c.JSON(401, nil)
+		return nil, false
+	}
+
+	return permission, true
+}
+
 // CurrentUserHandler handles current user
 func (w *API) CurrentUserHandler(c *gin.Context) {
 	user, ok := w.getUser(c)
@@ -110,6 +123,39 @@ func (w *API) MySummaryHandler(c *gin.Context) {
 	summary := &model.Summary{}
 	if err := summary.FirstOrInit(model.DB(), user.AthleteID).Error; err != nil {
 		log.Error("Failure get summary", err)
+		c.JSON(500, w.internalError(err))
+		return
+	}
+
+	c.JSON(200, summary)
+}
+
+// RecalcMySummaryHandler handles current user
+func (w *API) RecalcMySummaryHandler(c *gin.Context) {
+	user, ok := w.getUser(c)
+	if !ok {
+		return
+	}
+
+	permission, ok := w.getPermission(c, user)
+	if !ok {
+		return
+	}
+
+	activities, err := w.WebhookClient.getActivitiesInMonth(time.Now(), permission)
+	if err != nil {
+		log.Error("Failure get activities", err)
+		c.JSON(500, w.internalError(err))
+		return
+	}
+
+	summary := model.Summary{AthleteID: user.AthleteID}
+	for _, a := range activities {
+		summary = summary.MigrateBySummary(&a)
+	}
+
+	if err := summary.Save(model.DB()).Error; err != nil {
+		log.Error("Failure save summary", err)
 		c.JSON(500, w.internalError(err))
 		return
 	}

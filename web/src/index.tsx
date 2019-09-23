@@ -27,10 +27,10 @@ const App: React.FC = () => {
   const [stravaAuth, setStravaAuth] = React.useState('')
   const [draftKey, setDraftKey] = React.useState('')
   const [draftMessage, setDraftMessage] = React.useState('')
-  const [snack, setSnack] = React.useState(false)
+  const [snack, setSnack] = React.useState('')
 
   const onCloseSnack = React.useCallback(() => {
-    setSnack(false)
+    setSnack('')
   }, [])
   const onInputDraftKey = React.useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
     setDraftKey(e.currentTarget.value)
@@ -41,6 +41,7 @@ const App: React.FC = () => {
   const onSubmit = React.useCallback(
     (e: React.FormEvent<HTMLFormElement>) => {
       e.preventDefault()
+      setLoading(true)
       axios
         .post('/api/current_user', {
           iftttKey: draftKey,
@@ -48,11 +49,29 @@ const App: React.FC = () => {
         })
         .then(res => {
           setUser(res.data)
-          setSnack(true)
+          setSnack('Saved')
+          setLoading(false)
+        })
+        .catch(() => {
+          setLoading(false)
         })
     },
     [draftKey, draftMessage],
   )
+
+  const onRecalc = React.useCallback(() => {
+    setLoading(true)
+    axios
+      .put('/api/current_user/recalc')
+      .then(res => {
+        setSummary(res.data)
+        setSnack('Recalced')
+        setLoading(false)
+      })
+      .catch(() => {
+        setLoading(false)
+      })
+  }, [])
 
   React.useEffect(() => {
     axios
@@ -87,16 +106,13 @@ const App: React.FC = () => {
         <form onSubmit={onSubmit}>
           <Grid container>
             <Grid item xs={12}>
-              <Typography>ID</Typography>
-              <p>{user.id}</p>
+              <Typography>ID: {user.id}</Typography>
             </Grid>
             <Grid item xs={12}>
-              <Typography>Strava ID</Typography>
-              <p>{user.athleteId}</p>
+              <Typography>Strava ID: {user.athleteId}</Typography>
             </Grid>
             <Grid item xs={12}>
-              <Typography>Strava Username</Typography>
-              <p>{user.username}</p>
+              <Typography>Strava Username: {user.username}</Typography>
             </Grid>
             <Grid item xs={12}>
               <TextField
@@ -127,13 +143,13 @@ const App: React.FC = () => {
               vertical: 'bottom',
               horizontal: 'left',
             }}
-            open={snack}
+            open={!!snack}
             autoHideDuration={6000}
             onClose={onCloseSnack}
             ContentProps={{
               'aria-describedby': 'message-id',
             }}
-            message={<span>Saved</span>}
+            message={<span>{snack}</span>}
             action={[
               <IconButton key="close" aria-label="close" color="inherit" onClick={onCloseSnack}>
                 <CloseIcon />
@@ -163,7 +179,15 @@ const App: React.FC = () => {
   ])
 
   const summaryBlock = React.useMemo(() => {
-    if (summary) return <SummaryCard summary={summary} />
+    if (summary)
+      return (
+        <>
+          <SummaryCard summary={summary} />
+          <Button type="button" variant="contained" color="primary" onClick={onRecalc}>
+            Recalc
+          </Button>
+        </>
+      )
 
     return (
       <Card>
@@ -174,7 +198,7 @@ const App: React.FC = () => {
         </CardContent>
       </Card>
     )
-  }, [summary])
+  }, [onRecalc, summary])
 
   const mainBlock = React.useMemo(() => {
     if (!loading)

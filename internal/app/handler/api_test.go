@@ -9,6 +9,7 @@ import (
 	"testing"
 
 	"strvucks-go/internal/app/model"
+	"strvucks-go/pkg/swagger"
 
 	"github.com/gin-gonic/gin"
 	"github.com/joho/godotenv"
@@ -47,7 +48,7 @@ func TestGetUser(t *testing.T) {
 	{
 		router := gin.New()
 		router.GET("/hoge", func(c *gin.Context) {
-			api := API{&AuthClientMock{}}
+			api := API{nil, &AuthClientMock{}}
 			user, ok := api.getUser(c)
 			assert.True(t, ok, "success get user")
 			assert.Equal(t, int64(10), user.ID, "success get user")
@@ -67,7 +68,7 @@ func TestGetUser(t *testing.T) {
 	{
 		router := gin.New()
 		router.GET("/hoge", func(c *gin.Context) {
-			api := API{&AuthClientMockError{}}
+			api := API{nil, &AuthClientMockError{}}
 			user, ok := api.getUser(c)
 			assert.False(t, ok, "not auth")
 			assert.Nil(t, user, "not auth")
@@ -87,7 +88,7 @@ func TestGetUser(t *testing.T) {
 		db.Delete(&user)
 		router := gin.New()
 		router.GET("/hoge", func(c *gin.Context) {
-			api := API{&AuthClientMock{}}
+			api := API{nil, &AuthClientMock{}}
 			user, ok := api.getUser(c)
 			assert.False(t, ok, "not found")
 			assert.Nil(t, user, "not found")
@@ -101,6 +102,61 @@ func TestGetUser(t *testing.T) {
 		w := httptest.NewRecorder()
 		router.ServeHTTP(w, req)
 		assert.Equal(t, 404, w.Code, "not found")
+	}
+}
+
+func TestGetPermission(t *testing.T) {
+	user := model.User{ID: 10, AthleteID: 100}
+	db := model.DB()
+	if err := db.Save(&user).Error; err != nil {
+		t.Fatal("cannot create user", err)
+	}
+	defer db.Delete(&user)
+
+	permission := model.Permission{AthleteID: 100}
+	if err := db.Save(&permission).Error; err != nil {
+		t.Fatal("cannot create permission", err)
+	}
+	defer db.Delete(&permission)
+
+	{
+		router := gin.New()
+		router.GET("/hoge", func(c *gin.Context) {
+			api := API{}
+			p, ok := api.getPermission(c, &user)
+			assert.True(t, ok, "success get permission")
+			assert.Equal(t, int64(100), p.AthleteID, "success get permission")
+			c.JSON(200, p)
+		})
+
+		req, err := http.NewRequest("GET", "/hoge", nil)
+		if err != nil {
+			t.Error("NewRequest URI error")
+		}
+
+		w := httptest.NewRecorder()
+		router.ServeHTTP(w, req)
+		assert.Equal(t, 200, w.Code, "success get permission")
+	}
+
+	{
+		db.Delete(&user)
+		router := gin.New()
+		router.GET("/hoge", func(c *gin.Context) {
+			api := API{}
+			p, ok := api.getPermission(c, &user)
+			assert.False(t, ok, "not auth")
+			assert.Nil(t, p, "not auth")
+		})
+
+		req, err := http.NewRequest("GET", "/hoge", nil)
+		if err != nil {
+			t.Error("NewRequest URI error")
+		}
+
+		w := httptest.NewRecorder()
+		router.ServeHTTP(w, req)
+		assert.Equal(t, 401, w.Code, "not auth")
 	}
 }
 
@@ -137,7 +193,7 @@ func TestStravaAuthURL(t *testing.T) {
 func TestCurrentUserHandler(t *testing.T) {
 	godotenv.Load("../../../.env")
 
-	api := API{&AuthClientMock{}}
+	api := API{nil, &AuthClientMock{}}
 	router := gin.New()
 	router.GET("/hoge", api.CurrentUserHandler)
 
@@ -172,7 +228,7 @@ func TestCurrentUserHandler(t *testing.T) {
 func TestUpdateCurrentUserHandler(t *testing.T) {
 	godotenv.Load("../../../.env")
 
-	api := API{&AuthClientMock{}}
+	api := API{nil, &AuthClientMock{}}
 	router := gin.New()
 	router.POST("/hoge", api.UpdateCurrentUserHandler)
 
@@ -208,7 +264,7 @@ func TestUpdateCurrentUserHandler(t *testing.T) {
 func TestMySummaryHandler(t *testing.T) {
 	godotenv.Load("../../../.env")
 
-	api := API{&AuthClientMock{}}
+	api := API{nil, &AuthClientMock{}}
 	router := gin.New()
 	router.GET("/hoge", api.MySummaryHandler)
 
@@ -244,5 +300,69 @@ func TestMySummaryHandler(t *testing.T) {
 			assert.Equal(t, int64(20), summary.AthleteID, "success get summary")
 			assert.Equal(t, int64(3), summary.WeeklyCount, "success get summary")
 		}
+	}
+}
+
+func TestRecalcMySummaryHandler(t *testing.T) {
+	user := model.User{ID: 10, AthleteID: 100}
+	db := model.DB()
+	if err := db.Save(&user).Error; err != nil {
+		t.Fatal("cannot create user", err)
+	}
+	defer db.Delete(&user)
+
+	permission := model.Permission{AthleteID: 100}
+	if err := db.Save(&permission).Error; err != nil {
+		t.Fatal("cannot create permission", err)
+	}
+	defer db.Delete(&permission)
+
+	summary := model.Summary{AthleteID: 100}
+	if err := db.Save(&summary).Error; err != nil {
+		t.Fatal("cannot create summary", err)
+	}
+	defer db.Delete(&summary)
+
+	{
+		api := API{&WebhookClientMock{
+			AL: []swagger.SummaryActivity{
+				swagger.SummaryActivity{Distance: 1},
+				swagger.SummaryActivity{Distance: 2},
+			},
+		}, &AuthClientMock{}}
+		router := gin.New()
+		router.GET("/hoge", api.RecalcMySummaryHandler)
+
+		req, err := http.NewRequest("GET", "/hoge", nil)
+		if err != nil {
+			t.Error("NewRequest URI error")
+		}
+
+		w := httptest.NewRecorder()
+		router.ServeHTTP(w, req)
+		assert.Equal(t, 200, w.Code, "success recalc summary")
+		sum := model.Summary{ID: summary.ID}
+		if err := db.First(&sum).Error; err != nil {
+			t.Fatal("cannot get summary", err)
+		}
+		assert.Equal(t, float64(3), sum.WeeklyDistance, "success recalc summary")
+		db.Delete(&sum)
+	}
+
+	{
+		api := API{&WebhookClientMock{
+			E: errors.New("error"),
+		}, &AuthClientMock{}}
+		router := gin.New()
+		router.GET("/hoge", api.RecalcMySummaryHandler)
+
+		req, err := http.NewRequest("GET", "/hoge", nil)
+		if err != nil {
+			t.Error("NewRequest URI error")
+		}
+
+		w := httptest.NewRecorder()
+		router.ServeHTTP(w, req)
+		assert.Equal(t, 500, w.Code, "failure recalc summary")
 	}
 }

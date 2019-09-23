@@ -7,14 +7,15 @@ import (
 	"fmt"
 	"net/http"
 	"os"
+	"time"
 
 	"strvucks-go/internal/app/model"
 	"strvucks-go/pkg/swagger"
 
-	log "github.com/sirupsen/logrus"
-
 	"github.com/antihax/optional"
 	"github.com/gin-gonic/gin"
+	"github.com/jinzhu/now"
+	log "github.com/sirupsen/logrus"
 )
 
 // Webhook handles webhook of Strava
@@ -30,19 +31,43 @@ func NewWebhook() *Webhook {
 // WebhookClient is an external module
 type WebhookClient interface {
 	getActivity(activityID int64, permission *model.Permission) (*swagger.DetailedActivity, error)
+	getActivitiesInMonth(date time.Time, permission *model.Permission) ([]swagger.SummaryActivity, error)
 	postTextToIfttt(text string, user *model.User) error
 }
 
 // WebhookClientImpl implements WebhookClient
 type WebhookClientImpl struct{}
 
-func (w *WebhookClientImpl) getActivity(activityID int64, permission *model.Permission) (*swagger.DetailedActivity, error) {
+func (w *WebhookClientImpl) getClient(permission *model.Permission) *swagger.APIClient {
 	config := swagger.NewConfiguration()
 	config.HTTPClient = Client(permission)
-	client := swagger.NewAPIClient(config)
+	return swagger.NewAPIClient(config)
+}
+
+func (w *WebhookClientImpl) getActivity(activityID int64, permission *model.Permission) (*swagger.DetailedActivity, error) {
+	client := w.getClient(permission)
+	log.Info("Start get activity from Strava")
 	activity, _, err := client.ActivitiesApi.GetActivityById(context.Background(), activityID, &swagger.GetActivityByIdOpts{IncludeAllEfforts: optional.EmptyBool()})
+	log.Info("End get activity from Strava")
 
 	return &activity, err
+}
+
+func (w *WebhookClientImpl) getActivitiesInMonth(date time.Time, permission *model.Permission) ([]swagger.SummaryActivity, error) {
+	today := now.New(date)
+	after := today.BeginningOfMonth()
+	before := today.EndOfMonth()
+
+	client := w.getClient(permission)
+	log.Info("Start get activities from Strava")
+	activities, _, err := client.ActivitiesApi.GetLoggedInAthleteActivities(context.Background(), &swagger.GetLoggedInAthleteActivitiesOpts{
+		After:   optional.NewInt32(int32(after.Unix())),
+		Before:  optional.NewInt32(int32(before.Unix())),
+		PerPage: optional.NewInt32(100),
+	})
+	log.Info("End get activities from Strava")
+
+	return activities, err
 }
 
 func (w *WebhookClientImpl) postTextToIfttt(text string, user *model.User) error {
@@ -53,7 +78,9 @@ func (w *WebhookClientImpl) postTextToIfttt(text string, user *model.User) error
 	buff := new(bytes.Buffer)
 	json.NewEncoder(buff).Encode(body)
 
+	log.Info("Start post IFTTT")
 	_, err := http.Post(iftttURL, "application/json; charset=utf-8", buff)
+	log.Info("End post IFTTT")
 	return err
 }
 

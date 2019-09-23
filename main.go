@@ -44,6 +44,7 @@ func main() {
 		apiRoute.GET("/current_user", api.CurrentUserHandler)
 		apiRoute.POST("/current_user", api.UpdateCurrentUserHandler)
 		apiRoute.GET("/current_user/summary", api.MySummaryHandler)
+		apiRoute.PUT("/current_user/recalc", api.RecalcMySummaryHandler)
 	}
 
 	r.StaticFS("/assets", http.Dir("web/assets"))
