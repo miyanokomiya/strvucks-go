@@ -1,4 +1,9 @@
 {
+  "name": "web",
+  "version": "1.0.0",
+  "engines": {
+    "node": "10.x"
+  },
   "scripts": {
     "heroku-postbuild": "cd ./web && yarn build"
   }
