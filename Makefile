@@ -28,8 +28,4 @@ test:
 	POSTGRES_DB=${POSTGRES_DB}_test go test ./ ./internal/...
 
 release:
-	cd ./web
-	yarn install
-	yarn build
-	cd ../
 	make goose/up
