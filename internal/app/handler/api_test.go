@@ -9,8 +9,8 @@ import (
 	"testing"
 
 	"strvucks-go/internal/app/model"
-	"strvucks-go/pkg/swagger"
 
+  "github.com/miyanokomiya/strava-client-go"
 	"github.com/gin-gonic/gin"
 	"github.com/joho/godotenv"
 	"github.com/stretchr/testify/assert"
@@ -325,9 +325,9 @@ func TestRecalcMySummaryHandler(t *testing.T) {
 
 	{
 		api := API{&WebhookClientMock{
-			AL: []swagger.SummaryActivity{
-				swagger.SummaryActivity{Distance: 1},
-				swagger.SummaryActivity{Distance: 2},
+			AL: []strava.SummaryActivity{
+				strava.SummaryActivity{Distance: 1},
+				strava.SummaryActivity{Distance: 2},
 			},
 		}, &AuthClientMock{}}
 		router := gin.New()

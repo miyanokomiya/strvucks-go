@@ -10,8 +10,8 @@ import (
 	"time"
 
 	"strvucks-go/internal/app/model"
-	"strvucks-go/pkg/swagger"
 
+  "github.com/miyanokomiya/strava-client-go"
 	"github.com/antihax/optional"
 	"github.com/gin-gonic/gin"
 	"github.com/jinzhu/now"
@@ -30,37 +30,37 @@ func NewWebhook() *Webhook {
 
 // WebhookClient is an external module
 type WebhookClient interface {
-	getActivity(activityID int64, permission *model.Permission) (*swagger.DetailedActivity, error)
-	getActivitiesInMonth(date time.Time, permission *model.Permission) ([]swagger.SummaryActivity, error)
+	getActivity(activityID int64, permission *model.Permission) (*strava.DetailedActivity, error)
+	getActivitiesInMonth(date time.Time, permission *model.Permission) ([]strava.SummaryActivity, error)
 	postTextToIfttt(text string, user *model.User) error
 }
 
 // WebhookClientImpl implements WebhookClient
 type WebhookClientImpl struct{}
 
-func (w *WebhookClientImpl) getClient(permission *model.Permission) *swagger.APIClient {
-	config := swagger.NewConfiguration()
+func (w *WebhookClientImpl) getClient(permission *model.Permission) *strava.APIClient {
+	config := strava.NewConfiguration()
 	config.HTTPClient = Client(permission)
-	return swagger.NewAPIClient(config)
+	return strava.NewAPIClient(config)
 }
 
-func (w *WebhookClientImpl) getActivity(activityID int64, permission *model.Permission) (*swagger.DetailedActivity, error) {
+func (w *WebhookClientImpl) getActivity(activityID int64, permission *model.Permission) (*strava.DetailedActivity, error) {
 	client := w.getClient(permission)
 	log.Info("Start get activity from Strava")
-	activity, _, err := client.ActivitiesApi.GetActivityById(context.Background(), activityID, &swagger.GetActivityByIdOpts{IncludeAllEfforts: optional.EmptyBool()})
+	activity, _, err := client.ActivitiesApi.GetActivityById(context.Background(), activityID, &strava.GetActivityByIdOpts{IncludeAllEfforts: optional.EmptyBool()})
 	log.Info("End get activity from Strava")
 
 	return &activity, err
 }
 
-func (w *WebhookClientImpl) getActivitiesInMonth(date time.Time, permission *model.Permission) ([]swagger.SummaryActivity, error) {
+func (w *WebhookClientImpl) getActivitiesInMonth(date time.Time, permission *model.Permission) ([]strava.SummaryActivity, error) {
 	today := now.New(date)
 	after := today.BeginningOfMonth()
 	before := today.EndOfMonth()
 
 	client := w.getClient(permission)
 	log.Info("Start get activities from Strava")
-	activities, _, err := client.ActivitiesApi.GetLoggedInAthleteActivities(context.Background(), &swagger.GetLoggedInAthleteActivitiesOpts{
+	activities, _, err := client.ActivitiesApi.GetLoggedInAthleteActivities(context.Background(), &strava.GetLoggedInAthleteActivitiesOpts{
 		After:   optional.NewInt32(int32(after.Unix())),
 		Before:  optional.NewInt32(int32(before.Unix())),
 		PerPage: optional.NewInt32(100),

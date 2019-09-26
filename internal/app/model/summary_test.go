@@ -5,8 +5,7 @@ import (
 	"testing"
 	"time"
 
-	"strvucks-go/pkg/swagger"
-
+  "github.com/miyanokomiya/strava-client-go"
 	"github.com/jinzhu/now"
 	"github.com/stretchr/testify/assert"
 )
@@ -84,14 +83,14 @@ func TestMigrate(t *testing.T) {
 	}
 
 	type Data struct {
-		act swagger.DetailedActivity
+		act strava.DetailedActivity
 		exp Summary
 		mes string
 	}
 
 	data := []Data{
 		Data{
-			act: swagger.DetailedActivity{
+			act: strava.DetailedActivity{
 				StartDate:          baseTime.AddDate(0, 0, 1),
 				Distance:           100,
 				MovingTime:         200,
@@ -119,7 +118,7 @@ func TestMigrate(t *testing.T) {
 			mes: "same month, week => summate month, week",
 		},
 		Data{
-			act: swagger.DetailedActivity{
+			act: strava.DetailedActivity{
 				StartDate:          baseTime.AddDate(0, 0, 7),
 				Distance:           100,
 				MovingTime:         200,
@@ -147,7 +146,7 @@ func TestMigrate(t *testing.T) {
 			mes: "same month, different week => summate month, replace week",
 		},
 		Data{
-			act: swagger.DetailedActivity{
+			act: strava.DetailedActivity{
 				StartDate:          baseTime.AddDate(0, 1, 0),
 				Distance:           100,
 				MovingTime:         200,
@@ -205,14 +204,14 @@ func TestMigrateBySummary(t *testing.T) {
 	}
 
 	type Data struct {
-		act swagger.SummaryActivity
+		act strava.SummaryActivity
 		exp Summary
 		mes string
 	}
 
 	data := []Data{
 		Data{
-			act: swagger.SummaryActivity{
+			act: strava.SummaryActivity{
 				StartDate:          baseTime.AddDate(0, 0, 1),
 				Distance:           100,
 				MovingTime:         200,
