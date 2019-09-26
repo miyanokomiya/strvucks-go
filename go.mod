@@ -14,7 +14,7 @@ require (
 	github.com/kr/pretty v0.1.0 // indirect
 	github.com/mattn/go-isatty v0.0.9 // indirect
 	github.com/miyanokomiya/strava-client-go v1.0.7
-	github.com/sirupsen/logrus v1.2.0
+	github.com/sirupsen/logrus v1.4.2
 	github.com/stretchr/testify v1.4.0
 	golang.org/x/oauth2 v0.0.0-20190604053449-0f29369cfe45
 )
