@@ -11,10 +11,10 @@ import (
 
 	"strvucks-go/internal/app/model"
 
-  "github.com/miyanokomiya/strava-client-go"
 	"github.com/antihax/optional"
 	"github.com/gin-gonic/gin"
 	"github.com/jinzhu/now"
+	"github.com/miyanokomiya/strava-client-go"
 	log "github.com/sirupsen/logrus"
 )
 
@@ -128,7 +128,7 @@ func (w *Webhook) WebhookHandler(c *gin.Context) {
 	db := model.DB()
 	if err := db.Create(&event).Error; err != nil {
 		l.Error("Failure create event:", err)
-		c.JSON(500, nil)
+		c.JSON(200, nil)
 		return
 	}
 	l.Info("Success create event")
