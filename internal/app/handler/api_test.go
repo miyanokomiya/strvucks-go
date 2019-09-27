@@ -346,6 +346,7 @@ func TestRecalcMySummaryHandler(t *testing.T) {
 			t.Fatal("cannot get summary", err)
 		}
 		assert.Equal(t, float64(3), sum.WeeklyDistance, "success recalc summary")
+		assert.Equal(t, float64(1), sum.LatestDistance, "latest activity is head of array")
 		db.Delete(&sum)
 	}
 
