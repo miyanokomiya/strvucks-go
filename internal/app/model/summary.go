@@ -5,8 +5,7 @@ import (
 	"strings"
 	"time"
 
-	"strvucks-go/pkg/swagger"
-
+  "github.com/miyanokomiya/strava-client-go"
 	"github.com/jinzhu/gorm"
 	_ "github.com/jinzhu/gorm/dialects/postgres"
 	"github.com/jinzhu/now"
@@ -51,7 +50,7 @@ func (s *Summary) Save(db *gorm.DB) *gorm.DB {
 }
 
 // Migrate Summary
-func (s Summary) Migrate(activity *swagger.DetailedActivity) Summary {
+func (s Summary) Migrate(activity *strava.DetailedActivity) Summary {
 	n := now.New(activity.StartDate)
 	monthBaseDate := n.BeginningOfMonth()
 	weekBaseDate := n.BeginningOfWeek()
@@ -99,8 +98,8 @@ func (s Summary) Migrate(activity *swagger.DetailedActivity) Summary {
 }
 
 // MigrateBySummary migrate Summary from SummaryActivity
-func (s Summary) MigrateBySummary(activity *swagger.SummaryActivity) Summary {
-	return s.Migrate(&swagger.DetailedActivity{
+func (s Summary) MigrateBySummary(activity *strava.SummaryActivity) Summary {
+	return s.Migrate(&strava.DetailedActivity{
 		StartDate:          activity.StartDate,
 		Distance:           activity.Distance,
 		MovingTime:         activity.MovingTime,

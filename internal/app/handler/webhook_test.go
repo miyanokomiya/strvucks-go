@@ -6,23 +6,23 @@ import (
 	"time"
 
 	"strvucks-go/internal/app/model"
-	"strvucks-go/pkg/swagger"
 
+  "github.com/miyanokomiya/strava-client-go"
 	"github.com/stretchr/testify/assert"
 )
 
 type WebhookClientMock struct {
-	A  *swagger.DetailedActivity
-	AL []swagger.SummaryActivity
+	A  *strava.DetailedActivity
+	AL []strava.SummaryActivity
 	E  error
 }
 
-func (w *WebhookClientMock) getActivity(activityID int64, permission *model.Permission) (*swagger.DetailedActivity, error) {
+func (w *WebhookClientMock) getActivity(activityID int64, permission *model.Permission) (*strava.DetailedActivity, error) {
 
 	return w.A, w.E
 }
 
-func (w *WebhookClientMock) getActivitiesInMonth(date time.Time, permission *model.Permission) ([]swagger.SummaryActivity, error) {
+func (w *WebhookClientMock) getActivitiesInMonth(date time.Time, permission *model.Permission) ([]strava.SummaryActivity, error) {
 	return w.AL, w.E
 }
 
@@ -45,7 +45,7 @@ func TestUpdateSummary(t *testing.T) {
 	}
 	defer db.Delete(&permission)
 
-	webhookAct := Webhook{&WebhookClientMock{&swagger.DetailedActivity{}, nil, nil}}
+	webhookAct := Webhook{&WebhookClientMock{&strava.DetailedActivity{}, nil, nil}}
 	summaryAct := webhookAct.updateSummary(100, 1)
 	assert.Equal(t, int64(1), summaryAct.WeeklyCount, "get updated summary if activity exists")
 
