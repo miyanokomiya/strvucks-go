@@ -21,12 +21,12 @@ exports[`src/components/Summary snapshot 1`] = `
       className="MuiTypography-root MuiTypography-body1"
     >
       3
-       m
+      m
     </p>
     <p
       className="MuiTypography-root MuiTypography-body1"
     >
-      00m
+      00:04
     </p>
     <p
       className="MuiTypography-root MuiTypography-body1"
@@ -50,12 +50,12 @@ exports[`src/components/Summary snapshot 1`] = `
       className="MuiTypography-root MuiTypography-body1"
     >
       1,005
-       m
+      m
     </p>
     <p
       className="MuiTypography-root MuiTypography-body1"
     >
-      27h46m
+      27:46:46
     </p>
     <p
       className="MuiTypography-root MuiTypography-body1"
@@ -73,12 +73,12 @@ exports[`src/components/Summary snapshot 1`] = `
       className="MuiTypography-root MuiTypography-body1"
     >
       14
-       m
+      m
     </p>
     <p
       className="MuiTypography-root MuiTypography-body1"
     >
-      00m
+      00:15
     </p>
     <p
       className="MuiTypography-root MuiTypography-body1"

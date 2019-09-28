@@ -1,7 +1,7 @@
 import * as React from 'react'
 import renderer from 'react-test-renderer'
-import { SummaryCard, Props } from '../../../src/components/Summary'
-import { mockSummary } from '../../mock'
+import { SummaryCard, Props } from '../../src/components/Summary'
+import { mockSummary } from '../mock'
 
 describe('src/components/Summary', () => {
   it('snapshot', () => {

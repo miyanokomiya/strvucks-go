@@ -135,10 +135,11 @@ func (s *Summary) GenerateText(activityID int64) string {
 func formatTime(sec int64) string {
 	h := math.Floor(float64(sec) / 60 / 60)
 	m := math.Floor(float64(sec)/60 - (60 * h))
+	s := sec % 60
 	if h == 0 {
-		return fmt.Sprintf("%02.0fm", m)
+		return fmt.Sprintf("%02.0f:%02d", m, s)
 	}
-	return fmt.Sprintf("%1.0fh%02.0fm", h, m)
+	return fmt.Sprintf("%1.0f:%02.0f:%02d", h, m, s)
 }
 
 func formatLap(meter float64, sec int64) string {
