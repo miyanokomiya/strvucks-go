@@ -30,5 +30,4 @@ script:
   - cd web
   - yarn install
   - yarn lint
-  - yarn test --coverageReporters=text-lcov
-  - COVERALLS_SERVICE_JOB_ID="${TRAVIS_JOB_ID}-front" yarn coveralls
+  - yarn test
