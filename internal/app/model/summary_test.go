@@ -253,22 +253,22 @@ func TestGenerateText(t *testing.T) {
 		LatestDistance:    1100,
 		LatestMovingTime:  121,
 		LatestCalories:    1400,
-		MonthBaseDate:     now.New(baseTime).BeginningOfMonth(),
-		MonthlyCount:      3,
-		MonthlyDistance:   2100,
-		MonthlyMovingTime: 182,
-		MonthlyCalories:   2400,
 		WeekBaseDate:      now.New(baseTime).BeginningOfWeek(),
 		WeeklyCount:       2,
 		WeeklyDistance:    3100,
 		WeeklyMovingTime:  243,
 		WeeklyCalories:    3400,
+		MonthBaseDate:     now.New(baseTime).BeginningOfMonth(),
+		MonthlyCount:      3,
+		MonthlyDistance:   2100,
+		MonthlyMovingTime: 60 * 60,
+		MonthlyCalories:   2400,
 	}
 
 	exp := []string{
-    "New Act: 1.10km 02m 1:50/km 1400kcal ",
-    "Weekly: 3.10km 04m 1:18/km (2) ",
-    "Monthly: 2.10km 03m 1:27/km (3) ",
+		"New Act: 1.10km 02:01 1:50/km 1400kcal ",
+		"Weekly: 3.10km 04:03 1:18/km (2) ",
+    "Monthly: 2.10km 1:00:00 28:34/km (3) ",
 		"https://www.strava.com/activities/999",
 	}
 
@@ -282,13 +282,13 @@ func TestFormatTime(t *testing.T) {
 	}
 
 	data := []Data{
-		Data{2 * 60, "02m"},
-		Data{32 * 60, "32m"},
-		Data{59 * 60, "59m"},
-		Data{60 * 60, "1h00m"},
-		Data{61 * 60, "1h01m"},
-		Data{612 * 60, "10h12m"},
-		Data{6012 * 60, "100h12m"},
+		Data{2*60 + 1, "02:01"},
+		Data{32*60 + 12, "32:12"},
+		Data{59 * 60, "59:00"},
+		Data{60*60 + 1, "1:00:01"},
+		Data{61*60 + 12, "1:01:12"},
+		Data{612 * 60, "10:12:00"},
+		Data{6012 * 60, "100:12:00"},
 	}
 
 	for _, d := range data {

@@ -1,9 +1,9 @@
 import * as React from 'react'
 import axios from 'axios'
 import renderer from 'react-test-renderer'
-import { actWait } from '../helper'
-import { App } from '../../src/App'
-import { mockUser, mockSummary } from '../mock'
+import { actWait } from './helper'
+import { App } from '../src/App'
+import { mockUser, mockSummary } from './mock'
 
 jest.mock('axios')
 

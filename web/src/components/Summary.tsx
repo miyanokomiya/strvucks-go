@@ -4,28 +4,7 @@ import Card from '@material-ui/core/Card'
 import CardContent from '@material-ui/core/CardContent'
 import PropTypes from 'prop-types'
 import { Summary } from '../types'
-
-const formatter = new Intl.NumberFormat('ja', {
-  useGrouping: true,
-  minimumFractionDigits: 0,
-  maximumFractionDigits: 0,
-})
-
-const formatTime = (sec: number): string => {
-  const h = Math.floor(sec / 60 / 60)
-  const m = Math.floor(sec / 60 - 60 * h)
-  if (h === 0) {
-    return `${String(m).padStart(2, '0')}m`
-  }
-  return `${h}h${String(m).padStart(2, '0')}m`
-}
-
-const formatLap = (meter: number, sec: number): string => {
-  const lap = sec / (meter / 1000)
-  const m = Math.floor(lap / 60)
-  const s = Math.floor(lap - 60 * m)
-  return `${m}:${String(s).padStart(2, '0')}/km`
-}
+import { formatNatural, formatTime, formatLap } from '../formatter'
 
 export type Props = {
   summary: Summary
@@ -40,16 +19,16 @@ export const SummaryCard: React.FC<Props> = props => {
         <Typography variant="subtitle1" color="textSecondary">
           Latest
         </Typography>
-        <Typography variant="body1">{formatter.format(summary.latestDistance)} m</Typography>
+        <Typography variant="body1">{formatNatural(summary.latestDistance)}m</Typography>
         <Typography variant="body1">{formatTime(summary.latestMovingTime)}</Typography>
         <Typography variant="body1">
           {formatLap(summary.latestDistance, summary.latestMovingTime)}
         </Typography>
-        <Typography variant="body1">{formatter.format(summary.latestCalories)} kcal</Typography>
+        <Typography variant="body1">{formatNatural(summary.latestCalories)} kcal</Typography>
         <Typography variant="subtitle1" color="textSecondary">
           Weekly ({summary.weeklyCount})
         </Typography>
-        <Typography variant="body1">{formatter.format(summary.weeklyDistance)} m</Typography>
+        <Typography variant="body1">{formatNatural(summary.weeklyDistance)}m</Typography>
         <Typography variant="body1">{formatTime(summary.weeklyMovingTime)}</Typography>
         <Typography variant="body1">
           {formatLap(summary.weeklyDistance, summary.weeklyMovingTime)}
@@ -57,7 +36,7 @@ export const SummaryCard: React.FC<Props> = props => {
         <Typography variant="subtitle1" color="textSecondary">
           Monthly ({summary.monthlyCount})
         </Typography>
-        <Typography variant="body1">{formatter.format(summary.monthlyDistance)} m</Typography>
+        <Typography variant="body1">{formatNatural(summary.monthlyDistance)}m</Typography>
         <Typography variant="body1">{formatTime(summary.monthlyMovingTime)}</Typography>
         <Typography variant="body1">
           {formatLap(summary.monthlyDistance, summary.monthlyMovingTime)}

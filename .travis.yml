@@ -1,12 +1,16 @@
 language: go
 
+go:
+  - 1.12.x
+
 env:
   - GO111MODULE=on POSTGRES_USER=postgres POSTGRES_DB=db DB_HOST=localhost
 
 cache:
   directories:
     - $GOPATH/pkg/mod
-    - web/node_modules
+    - $HOME/.cache/go-build
+    - $HOME/.cache/yarn
 
 services:
   - postgresql
