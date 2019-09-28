@@ -7,10 +7,10 @@ env:
   - GO111MODULE=on POSTGRES_USER=postgres POSTGRES_DB=db DB_HOST=localhost
 
 cache:
-  yarn: true
   directories:
-    - $HOME/.cache/go-build
     - $GOPATH/pkg/mod
+    - $HOME/.cache/go-build
+    - $HOME/.cache/yarn
 
 services:
   - postgresql
