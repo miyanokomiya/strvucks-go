@@ -27,7 +27,7 @@ const formatLap = (meter: number, sec: number): string => {
   return `${m}:${String(s).padStart(2, '0')}/km`
 }
 
-type Props = {
+export type Props = {
   summary: Summary
 }
 
