@@ -1,12 +1,13 @@
 package model
 
 import (
+	"fmt"
 	"strings"
 	"testing"
 	"time"
 
-  "github.com/miyanokomiya/strava-client-go"
 	"github.com/jinzhu/now"
+	"github.com/miyanokomiya/strava-client-go"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -265,11 +266,54 @@ func TestGenerateText(t *testing.T) {
 	}
 
 	exp := []string{
-		"New Act: 1.10km 2min 1400kcal ",
-		"Weekly: 3.10km 4min 3400kcal (2) ",
-		"Monthly: 2.10km 3min 2400kcal (3) ",
+    "New Act: 1.10km 02m 1:50/km 1400kcal ",
+    "Weekly: 3.10km 04m 1:18/km (2) ",
+    "Monthly: 2.10km 03m 1:27/km (3) ",
 		"https://www.strava.com/activities/999",
 	}
 
 	assert.Equal(t, strings.Join(exp, "\n"), s.GenerateText(999), "generate text")
+}
+
+func TestFormatTime(t *testing.T) {
+	type Data struct {
+		arg int64
+		exp string
+	}
+
+	data := []Data{
+		Data{2 * 60, "02m"},
+		Data{32 * 60, "32m"},
+		Data{59 * 60, "59m"},
+		Data{60 * 60, "1h00m"},
+		Data{61 * 60, "1h01m"},
+		Data{612 * 60, "10h12m"},
+		Data{6012 * 60, "100h12m"},
+	}
+
+	for _, d := range data {
+		assert.Equal(t, d.exp, formatTime(d.arg), fmt.Sprintf("%d => %s", d.arg, d.exp))
+	}
+}
+
+func TestFormatLap(t *testing.T) {
+	type Data struct {
+		meter float64
+		sec   int64
+		exp   string
+	}
+
+	data := []Data{
+		Data{1000, 10, "0:10/km"},
+		Data{2000, 10, "0:05/km"},
+		Data{500, 10, "0:20/km"},
+		Data{1000, 59, "0:59/km"},
+		Data{1000, 60, "1:00/km"},
+		Data{1000, 61, "1:01/km"},
+		Data{1000, 601, "10:01/km"},
+	}
+
+	for _, d := range data {
+		assert.Equal(t, d.exp, formatLap(d.meter, d.sec), fmt.Sprintf("%f meter, %d sec => %s", d.meter, d.sec, d.exp))
+	}
 }

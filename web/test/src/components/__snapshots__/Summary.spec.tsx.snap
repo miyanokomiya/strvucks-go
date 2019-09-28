@@ -1,0 +1,90 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`src/components/Summary snapshot 1`] = `
+<div
+  className="MuiPaper-root MuiPaper-elevation1 MuiCard-root MuiPaper-rounded"
+>
+  <div
+    className="MuiCardContent-root"
+  >
+    <h6
+      className="MuiTypography-root MuiTypography-h6"
+    >
+      Activity Summary
+    </h6>
+    <h6
+      className="MuiTypography-root MuiTypography-subtitle1 MuiTypography-colorTextSecondary"
+    >
+      Latest
+    </h6>
+    <p
+      className="MuiTypography-root MuiTypography-body1"
+    >
+      3
+       m
+    </p>
+    <p
+      className="MuiTypography-root MuiTypography-body1"
+    >
+      00m
+    </p>
+    <p
+      className="MuiTypography-root MuiTypography-body1"
+    >
+      22:13/km
+    </p>
+    <p
+      className="MuiTypography-root MuiTypography-body1"
+    >
+      6
+       kcal
+    </p>
+    <h6
+      className="MuiTypography-root MuiTypography-subtitle1 MuiTypography-colorTextSecondary"
+    >
+      Weekly (
+      1004
+      )
+    </h6>
+    <p
+      className="MuiTypography-root MuiTypography-body1"
+    >
+      1,005
+       m
+    </p>
+    <p
+      className="MuiTypography-root MuiTypography-body1"
+    >
+      27h46m
+    </p>
+    <p
+      className="MuiTypography-root MuiTypography-body1"
+    >
+      1658:28/km
+    </p>
+    <h6
+      className="MuiTypography-root MuiTypography-subtitle1 MuiTypography-colorTextSecondary"
+    >
+      Monthly (
+      14
+      )
+    </h6>
+    <p
+      className="MuiTypography-root MuiTypography-body1"
+    >
+      14
+       m
+    </p>
+    <p
+      className="MuiTypography-root MuiTypography-body1"
+    >
+      00m
+    </p>
+    <p
+      className="MuiTypography-root MuiTypography-body1"
+    >
+      17:51/km
+    </p>
+  </div>
+</div>
+`;

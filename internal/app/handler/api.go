@@ -150,8 +150,8 @@ func (w *API) RecalcMySummaryHandler(c *gin.Context) {
 	}
 
 	summary := model.Summary{AthleteID: user.AthleteID}
-	for _, a := range activities {
-		summary = summary.MigrateBySummary(&a)
+	for i, l := 0, len(activities); i < l; i++ {
+		summary = summary.MigrateBySummary(&activities[l-i-1])
 	}
 
 	if err := summary.Save(model.DB()).Error; err != nil {

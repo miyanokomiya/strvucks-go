@@ -4,21 +4,30 @@
   "scripts": {
     "build": "parcel build ./index.html --public-url /web",
     "start": "parcel watch ./index.html --public-url /web",
-    "lint": "eslint --ext .js,.jsx,.ts,.tsx ./"
+    "lint": "eslint --ext .js,.jsx,.ts,.tsx ./",
+    "test": "jest --coverage"
   },
   "devDependencies": {
+    "@testing-library/react-hooks": "^2.0.1",
+    "@types/jest": "^24.0.18",
     "@types/opentype": "^0.0.4",
     "@types/react": "^16.9.3",
     "@types/react-color": "^3.0.1",
     "@types/react-dom": "^16.9.1",
+    "@types/react-test-renderer": "^16.9.0",
     "@typescript-eslint/eslint-plugin": "^2.3.1",
     "@typescript-eslint/parser": "^2.3.1",
+    "babel-jest": "^24.9.0",
     "eslint": "^6.3.0",
     "eslint-config-prettier": "^6.1.0",
+    "eslint-plugin-jest": "^22.17.0",
     "eslint-plugin-prettier": "^3.1.0",
     "eslint-plugin-react": "^7.14.3",
-    "eslint-plugin-react-hooks": "^2.0.1",
-    "prettier": "^1.18.2"
+    "eslint-plugin-react-hooks": "^2.1.0",
+    "jest": "^24.9.0",
+    "prettier": "^1.18.2",
+    "react-test-renderer": "^16.10.0",
+    "ts-jest": "^24.1.0"
   },
   "dependencies": {
     "@material-ui/core": "^4.0.0",
@@ -31,9 +40,9 @@
     "parcel-bundler": "^1.12.3",
     "poly-decomp": "^0.3.0",
     "query-string": "^6.8.3",
-    "typescript": "^3.6.2",
-    "react": "^16.8.0",
+    "react": "^16.10.0",
     "react-color": "^2.17.3",
-    "react-dom": "^16.8.0"
+    "react-dom": "^16.10.0",
+    "typescript": "^3.6.2"
   }
 }

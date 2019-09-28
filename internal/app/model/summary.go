@@ -2,13 +2,14 @@ package model
 
 import (
 	"fmt"
+	"math"
 	"strings"
 	"time"
 
-  "github.com/miyanokomiya/strava-client-go"
 	"github.com/jinzhu/gorm"
 	_ "github.com/jinzhu/gorm/dialects/postgres"
 	"github.com/jinzhu/now"
+	"github.com/miyanokomiya/strava-client-go"
 )
 
 // Summary model
@@ -113,19 +114,36 @@ func (s *Summary) GenerateText(activityID int64) string {
 	lines := []string{
 		"New Act:",
 		fmt.Sprintf("%.2fkm", s.LatestDistance/1000),
-		fmt.Sprintf("%dmin", s.LatestMovingTime/60),
+		formatTime(s.LatestMovingTime),
+		formatLap(s.LatestDistance, s.LatestMovingTime),
 		fmt.Sprintf("%.0fkcal", s.LatestCalories),
 		"\nWeekly:",
 		fmt.Sprintf("%.2fkm", s.WeeklyDistance/1000),
-		fmt.Sprintf("%dmin", s.WeeklyMovingTime/60),
-		fmt.Sprintf("%.0fkcal", s.WeeklyCalories),
+		formatTime(s.WeeklyMovingTime),
+		formatLap(s.WeeklyDistance, s.WeeklyMovingTime),
 		fmt.Sprintf("(%d)", s.WeeklyCount),
 		"\nMonthly:",
 		fmt.Sprintf("%.2fkm", s.MonthlyDistance/1000),
-		fmt.Sprintf("%dmin", s.MonthlyMovingTime/60),
-		fmt.Sprintf("%.0fkcal", s.MonthlyCalories),
+		formatTime(s.MonthlyMovingTime),
+		formatLap(s.MonthlyDistance, s.MonthlyMovingTime),
 		fmt.Sprintf("(%d)", s.MonthlyCount),
 		fmt.Sprintf("\nhttps://www.strava.com/activities/%d", activityID),
 	}
 	return strings.Join(lines, " ")
+}
+
+func formatTime(sec int64) string {
+	h := math.Floor(float64(sec) / 60 / 60)
+	m := math.Floor(float64(sec)/60 - (60 * h))
+	if h == 0 {
+		return fmt.Sprintf("%02.0fm", m)
+	}
+	return fmt.Sprintf("%1.0fh%02.0fm", h, m)
+}
+
+func formatLap(meter float64, sec int64) string {
+	lap := float64(sec) / (meter / 1000)
+	m := math.Floor(lap / 60)
+	s := lap - (60 * m)
+	return fmt.Sprintf("%.0f:%02.0f/km", m, s)
 }

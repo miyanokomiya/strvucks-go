@@ -29,4 +29,3 @@ export interface Summary {
   weeklyTotalElevationGain: number
   weeklyCalories: number
 }
-

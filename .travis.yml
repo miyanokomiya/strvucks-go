@@ -6,6 +6,7 @@ env:
 cache:
   directories:
     - $GOPATH/pkg/mod
+    - web/node_modules
 
 services:
   - postgresql
@@ -26,3 +27,7 @@ before_script:
 script:
   - go test -v ./ ./internal/... -covermode=count -coverprofile=coverage.out
   - $HOME/gopath/bin/goveralls -coverprofile=coverage.out -service=travis-ci
+  - cd web
+  - yarn install
+  - yarn lint
+  - yarn test
