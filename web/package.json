@@ -8,7 +8,7 @@
     "test": "jest --coverage"
   },
   "devDependencies": {
-    "@testing-library/react-hooks": "^2.0.3",
+    "@testing-library/react-hooks": "^3.1.0",
     "@types/jest": "^24.0.18",
     "@types/opentype": "^0.0.4",
     "@types/react": "^16.9.7",
