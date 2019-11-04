@@ -35,7 +35,7 @@
     "@types/matter-js": "^0.10.2",
     "axios": "^0.19.0",
     "matter-js": "^0.14.2",
-    "okageo": "^1.1.5",
+    "okageo": "^1.1.6",
     "opentype.js": "^1.1.0",
     "parcel-bundler": "^1.12.4",
     "poly-decomp": "^0.3.0",
