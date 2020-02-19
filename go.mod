@@ -15,6 +15,6 @@ require (
 	github.com/mattn/go-isatty v0.0.9 // indirect
 	github.com/miyanokomiya/strava-client-go v1.0.8
 	github.com/sirupsen/logrus v1.4.2
-	github.com/stretchr/testify v1.4.0
+	github.com/stretchr/testify v1.5.0
 	golang.org/x/oauth2 v0.0.0-20190604053449-0f29369cfe45
 )
